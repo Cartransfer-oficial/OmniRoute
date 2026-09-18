@@ -1,0 +1,134 @@
+{
+  "app_name": "LOCAFACIL",
+  "theme_decision": "Toggle (Light and Dark). Default to Light Theme to maximize trust, legibility for documents/contracts, and broad accessibility, but offer a sleek 'Midnight' Dark mode for the app-like PWA experience (often preferred by tech-savvy users and drivers at night).",
+  "typography": {
+    "headings": {
+      "family": "Cabinet Grotesk",
+      "weights": ["700", "900"],
+      "usage": "Use Cabinet Grotesk for all H1-H4. It has a modern, slightly wide, and disruptive architectural feel that breaks away from generic SaaS looks. Import via Fontshare CDN.",
+      "tracking": "tracking-tight"
+    },
+    "body": {
+      "family": "Satoshi",
+      "weights": ["400", "500", "700"],
+      "usage": "Use Satoshi for body text, inputs, labels, and descriptions. Clean, geometric, and highly readable. Import via Fontshare CDN."
+    },
+    "labels_overlines": "Uppercase, tracking-[0.2em], text-xs, font-bold."
+  },
+  "colors": {
+    "palette_name": "Asphalt & Guaraná (Disruptive Mobility)",
+    "primary": {
+      "DEFAULT": "#FF5A00",
+      "hover": "#E04F00",
+      "foreground": "#FFFFFF",
+      "description": "Guaraná Orange - high energy, speed, transactional urgency, distinctly Latin American without being a cliché flag color."
+    },
+    "background": {
+      "light": "#FFFFFF",
+      "dark": "#0A0A0A"
+    },
+    "surface": {
+      "light": "#F7F7F9",
+      "dark": "#161616"
+    },
+    "trust": {
+      "DEFAULT": "#00A86B",
+      "description": "Emerald Green for verification badges, check-in success, and LGPD compliance signals."
+    },
+    "border": {
+      "light": "#E5E7EB",
+      "dark": "#27272A"
+    }
+  },
+  "visual_enhancers": {
+    "surfaces": "Use Solid Backgrounds with a sharp 1px border for vehicles cards (The 'Technical' Look). Use 'Crystal Glassmorphism' (backdrop-blur-xl bg-white/70 or bg-black/60 with backdrop-saturate-150) EXCLUSIVELY for the sticky navigation and bottom mobile tab bars.",
+    "borders": "Sharp or slightly rounded corners (rounded-md maximum, no pill-shaped cards). For a more mechanical/automotive feel, stick to 4px to 8px max radius.",
+    "shadows": "Ambient + direct shadows for floating CTAs. Cards should remain flat (no shadow) until hovered."
+  },
+  "grids_and_layouts": {
+    "general": "Follow 'Generous Spacing Philosophy'. Container internal padding must be p-6 or p-8.",
+    "bento_grid": "For vehicle details page highlights (tech, comfort, space), use 'MODE B: High Density Grid' (gap-4). Every pixel utilized.",
+    "listing_grid": "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 with gap-6. Cards must have a fixed aspect ratio for photos.",
+    "mobile_first": "Max width for main content constraints, bottom navigation bar on mobile (PWA style). Vehicle images must use max-h-[80vh] md:max-h-none."
+  },
+  "motion": {
+    "hover_states": "Cards lift (-translate-y-1) and gain shadow-lg. Buttons get slightly darker on hover. Do NOT use universal 'transition: all'. Use 'transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease'.",
+    "page_transitions": "Fade-in entrance for the grid lists (staggered if possible).",
+    "micro_interactions": "Heart (favorite) should scale pop when clicked. Filter sidebars should slide in smoothly."
+  },
+  "components": {
+    "vehicle_card": "Photo-first (aspect-video or 4:3). Include Price/day, Rating (★), Brand/Model, Category badge, and Trust verified icon. Sharp edges, 1px subtle border.",
+    "booking_cta": "Sticky on mobile (bottom of screen), sticky right-rail on desktop. Must show total transparent price breakdown (rental + commission/fees + insurance).",
+    "filters": "Sidebar on desktop, full-screen modal on mobile. Intelligent toggle sections.",
+    "trust_badges": "Prominent display of Verification Levels (CNH, Identity) with the Trust color (#00A86B).",
+    "forms": "Progressive onboarding. Floating labels or clear bold labels. Use Shadcn Inputs and Selects but remove the default heavy roundedness."
+  },
+  "accessibility": {
+    "contrast": "Text over hero image MUST have a gradient overlay (bg-gradient-to-t from-black/80 via-black/40 to-transparent) to ensure APCA standards.",
+    "focus": "focus:ring-2 focus:ring-primary focus:outline-none.",
+    "testing": "All interactive and key informational elements MUST include a data-testid attribute (e.g., data-testid='vehicle-card-book-button')."
+  },
+  "media": {
+    "icons": "Use @phosphor-icons/react (Duotone weight) for a high-end, premium feel. Run: yarn add @phosphor-icons/react",
+    "image_handling": "Hero overlay: max bg-black/50. object-cover for all vehicle cards."
+  },
+  "3d_libraries": {
+    "recommendation": "Not strictly necessary for MVP to keep PWA lightweight, but Framer Motion (framer-motion) is recommended for staggered card loads and modal slide-ins. Use leaflet for the interactive map integration."
+  },
+  "image_urls": {
+    "hero_coastal": {
+      "url": "https://images.pexels.com/photos/37075472/pexels-photo-37075472.jpeg",
+      "description": "Coastal road in Brazil, used for the main landing page hero background.",
+      "category": "hero"
+    },
+    "vehicle_economic": {
+      "url": "https://images.pexels.com/photos/12579276/pexels-photo-12579276.jpeg",
+      "description": "Hatchback car parked on a quiet street.",
+      "category": "vehicle_card"
+    },
+    "vehicle_suv": {
+      "url": "https://images.pexels.com/photos/7154537/pexels-photo-7154537.jpeg",
+      "description": "Black luxury SUV parked in a city lot.",
+      "category": "vehicle_card"
+    },
+    "vehicle_ev": {
+      "url": "https://images.pexels.com/photos/24376862/pexels-photo-24376862.jpeg",
+      "description": "Electric car charging on a city street.",
+      "category": "vehicle_card"
+    },
+    "vehicle_pickup": {
+      "url": "https://images.pexels.com/photos/11532838/pexels-photo-11532838.jpeg",
+      "description": "Pickup truck driving on a dirt road, rural capability.",
+      "category": "vehicle_card"
+    },
+    "host_profile": {
+      "url": "https://images.pexels.com/photos/7144213/pexels-photo-7144213.jpeg",
+      "description": "Smiling host/driver holding keys, used for host profile snippet.",
+      "category": "avatar_profile"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Use Shadcn UI for standard components (buttons, dialogs, inputs), but heavily customize the radius (set --radius to 0.25rem or 0.5rem max).",
+    "Install and use '@phosphor-icons/react' for UI icons.",
+    "Implement a PWA-like mobile layout: bottom tab navigation for mobile devices, hiding the top navbar links behind a clean mobile drawer if necessary.",
+    "For the booking flow, use a sticky right column on desktop (like Airbnb) and a sticky bottom bar on mobile with the 'Reserve' CTA and Total Price.",
+    "Ensure total transparency in pricing - break down the 10-15% commission visually in the booking summary.",
+    "Add data-testid attributes to all major interactive elements.",
+    "Ensure 'Inter' is NOT used anywhere; load Cabinet Grotesk for Headings and Satoshi for body via Fontshare CDN.",
+    "Use sonner for toast notifications.",
+    "Integrate Leaflet for the interactive map with vehicle pins."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "You tend to converge toward generic outputs. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) only where scrolling content exists underneath (e.g., sticky headers).",
+    "NEVER apply universal transition ('transition: all').",
+    "NEVER center align the app container via '.App { text-align: center; }'.",
+    "Use modern button styles (sharp edges or slight rounding) with interaction animations & color relevant to the app style.",
+    "NEVER use AI assistant Emoji characters like \ud83e\udd16\ud83e\udde0 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions. Static = dead.",
+    "DO NOT use complete transparent background in header or overlays. Ensure readability.",
+    "All interactive and key informational elements MUST include a data-testid attribute."
+  ]
+}
