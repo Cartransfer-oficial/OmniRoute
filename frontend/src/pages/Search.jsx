@@ -176,7 +176,7 @@ export default function Search() {
     }
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [filters]);
 
   return (
     <div data-testid="search-page" className="max-w-7xl mx-auto px-4 md:px-8 py-6 pb-24 md:pb-10">
