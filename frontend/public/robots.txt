@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /
+Allow: /buscar
+Allow: /veiculo/
+Allow: /como-funciona
+Allow: /login
+Allow: /cadastro
+
+# Protect private routes
+Disallow: /admin
+Disallow: /perfil
+Disallow: /minhas-reservas
+Disallow: /proprietario
+Disallow: /reserva/
+Disallow: /verificacao
+Disallow: /anuncie
+Disallow: /api/admin
+Disallow: /api/auth
+Disallow: /api/bookings
+Disallow: /api/messages
+Disallow: /api/kyc
+
+# Crawl-delay for polite crawlers
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: /api/sitemap.xml

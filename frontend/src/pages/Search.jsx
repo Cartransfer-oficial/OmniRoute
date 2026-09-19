@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import VehicleCard from "@/components/vehicle/VehicleCard";
 import VehicleMap from "@/components/vehicle/VehicleMap";
 import SearchBar from "@/components/vehicle/SearchBar";
+import SEO from "@/components/SEO";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -180,6 +181,12 @@ export default function Search() {
 
   return (
     <div data-testid="search-page" className="max-w-7xl mx-auto px-4 md:px-8 py-6 pb-24 md:pb-10">
+      <SEO
+        title={filters.city ? `Aluguel de carros em ${filters.city}` : "Buscar carros para alugar"}
+        description={filters.city
+          ? `Encontre carros para alugar em ${filters.city}. Filtre por categoria, câmbio, capacidade e preço. Pagamento seguro pela LOCAFACIL.`
+          : "Busca inteligente por localização, datas e características. Encontre SUV, sedan, 7 lugares, elétrico ou econômico com proprietários verificados."}
+      />
       <div className="mb-6"><SearchBar /></div>
 
       <div className="flex items-center justify-between mb-4 gap-2">

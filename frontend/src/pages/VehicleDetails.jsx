@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { api, formatBRL } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import VehicleMap from "@/components/vehicle/VehicleMap";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -83,6 +84,32 @@ export default function VehicleDetails() {
 
   return (
     <div data-testid="vehicle-details" className="max-w-7xl mx-auto px-4 md:px-8 py-6 pb-32">
+      <SEO
+        title={`Alugar ${v.brand} ${v.model} ${v.year} em ${v.city}`}
+        description={`${v.brand} ${v.model} ${v.year} · ${v.transmission === "automatic" ? "Automático" : "Manual"} · ${v.seats} lugares · ${v.city}/${v.state}. A partir de ${formatBRL(v.daily_price)}/dia com pagamento seguro pela LOCAFACIL.`}
+        image={v.photos?.[0]}
+        type="product"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": `${v.brand} ${v.model} ${v.year}`,
+          "image": v.photos || [],
+          "description": `${v.category} · ${v.transmission} · ${v.seats} lugares · ${v.fuel}`,
+          "brand": { "@type": "Brand", "name": v.brand },
+          "aggregateRating": v.rating_count > 0 ? {
+            "@type": "AggregateRating",
+            "ratingValue": v.rating_avg,
+            "reviewCount": v.rating_count,
+          } : undefined,
+          "offers": {
+            "@type": "Offer",
+            "price": v.daily_price,
+            "priceCurrency": "BRL",
+            "availability": "https://schema.org/InStock",
+            "areaServed": v.city,
+          },
+        }}
+      />
       {/* GALLERY */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
         <img src={v.photos?.[0]} alt="" className="w-full aspect-[4/3] object-cover" />

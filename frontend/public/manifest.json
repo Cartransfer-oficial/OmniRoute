@@ -1,0 +1,14 @@
+{
+  "short_name": "LOCAFACIL",
+  "name": "LOCAFACIL — Aluguel de carros no Brasil",
+  "description": "Marketplace de locação de veículos entre pessoas e empresas.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#FF5A00",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" }
+  ]
+}

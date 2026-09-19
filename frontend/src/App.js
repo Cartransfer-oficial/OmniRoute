@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import "@/App.css";
 import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -56,12 +57,14 @@ function Shell() {
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
-        <AuthProvider>
-          <Shell />
-          <Toaster position="top-right" richColors />
-        </AuthProvider>
-      </BrowserRouter>
+      <HelmetProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Shell />
+            <Toaster position="top-right" richColors />
+          </AuthProvider>
+        </BrowserRouter>
+      </HelmetProvider>
     </div>
   );
 }

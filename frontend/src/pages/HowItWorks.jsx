@@ -1,3 +1,5 @@
+import SEO from "@/components/SEO";
+
 export default function HowItWorks() {
   const steps = [
     { n: "01", t: "Cadastre-se em minutos", d: "Crie sua conta gratuitamente. Locatários passam por verificação de identidade e CNH antes da primeira reserva." },
@@ -8,6 +10,10 @@ export default function HowItWorks() {
   ];
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-8 py-16 pb-24" data-testid="how-page">
+      <SEO
+        title="Como funciona"
+        description="Aprenda como funciona o marketplace de aluguel de carros LOCAFACIL: cadastro, verificação, reserva com split de pagamento, contrato digital, check-in e check-out."
+      />
       <span className="overline text-[hsl(22,100%,50%)]">Como funciona</span>
       <h1 className="font-display text-4xl md:text-6xl font-black mt-2 leading-tight">O marketplace de mobilidade do Brasil.</h1>
       <p className="mt-6 text-lg text-muted-foreground max-w-2xl">A LOCAFACIL é <strong>intermediador tecnológico</strong> — não somos proprietários da frota. Conectamos pessoas e empresas com veículos verificados, contrato digital e pagamento seguro.</p>

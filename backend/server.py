@@ -11,6 +11,7 @@ import jwt
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Literal
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, Query
+from fastapi.responses import Response as FastAPIResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr
@@ -811,6 +812,42 @@ async def verify_vehicle(vid: str, user: dict = Depends(require_role("admin"))):
 
 
 # ------------- Seed -------------
+@api.get("/sitemap.xml")
+async def sitemap(request: Request):
+    """Dynamic sitemap listing all active vehicles for search engine indexing."""
+    # Prefer forwarded proto/host (behind proxy/ingress); force https for crawlers
+    host = request.headers.get("x-forwarded-host") or request.url.hostname
+    base = f"https://{host}"
+    vehicles = await db.vehicles.find({"status": "active"}, {"id": 1, "created_at": 1}).to_list(2000)
+    urls = [
+        {"loc": f"{base}/", "priority": "1.0", "changefreq": "daily"},
+        {"loc": f"{base}/buscar", "priority": "0.9", "changefreq": "daily"},
+        {"loc": f"{base}/como-funciona", "priority": "0.6", "changefreq": "monthly"},
+        {"loc": f"{base}/login", "priority": "0.3", "changefreq": "yearly"},
+        {"loc": f"{base}/cadastro", "priority": "0.5", "changefreq": "yearly"},
+    ]
+    for v in vehicles:
+        urls.append({
+            "loc": f"{base}/veiculo/{v['id']}",
+            "priority": "0.8",
+            "changefreq": "weekly",
+            "lastmod": (v.get("created_at") or "")[:10],
+        })
+    xml_urls = "\n".join(
+        f'  <url><loc>{u["loc"]}</loc>'
+        + (f'<lastmod>{u["lastmod"]}</lastmod>' if u.get("lastmod") else "")
+        + f'<changefreq>{u["changefreq"]}</changefreq><priority>{u["priority"]}</priority></url>'
+        for u in urls
+    )
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f'{xml_urls}\n'
+        '</urlset>'
+    )
+    return FastAPIResponse(content=xml, media_type="application/xml")
+
+
 async def seed():
     # commission
     if not await db.config.find_one({"key": "commission_pct"}):

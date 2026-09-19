@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import SearchBar from "@/components/vehicle/SearchBar";
+import SEO from "@/components/SEO";
 import { ShieldCheck, Car, HandCoins, Lightning, MapPin, Star } from "@phosphor-icons/react";
 
 const HERO = "https://images.pexels.com/photos/37075472/pexels-photo-37075472.jpeg";
@@ -16,6 +17,18 @@ const CATEGORIES = [
 export default function Home() {
   return (
     <div data-testid="home-page">
+      <SEO
+        title="Marketplace de aluguel de carros"
+        description="Encontre o carro certo, onde estiver, quando precisar. Alugue direto com proprietários verificados em todo o Brasil. SUV, sedan, 7 lugares, elétrico, com pagamento seguro e contrato digital."
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "LOCAFACIL — Marketplace de aluguel de carros",
+          "description": "Marketplace brasileiro de locação de veículos entre pessoas e empresas.",
+          "inLanguage": "pt-BR",
+          "isPartOf": { "@type": "WebSite", "name": "LOCAFACIL" },
+        }}
+      />
       {/* HERO */}
       <section className="relative -mt-16 pt-16 min-h-[92vh] flex items-end md:items-center">
         <img src={HERO} alt="" className="absolute inset-0 w-full h-full object-cover" />
