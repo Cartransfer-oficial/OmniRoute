@@ -1,0 +1,30 @@
+{
+  "summary": "Iteration 4 DriveHub rebrand + owner mgmt + notifications + admin suspend/analytics. Backend: 19/19 pytest tests passed in test_iteration4_drivehub.py — new admin login (admin@drivehub.com.br/DriveHub@2026), old admin@locafacil.com.br returns 401 (no legacy row present), vehicle PATCH (owner ok, non-owner 403, persisted), toggle-status active↔paused (paused hidden from public GET /vehicles), soft DELETE sets status=deleted (hidden publicly), owner cannot create bookings (403 from require_role), notifications shape+auth+read-all, auto notification on booking (owner gets kind=booking_requested 'Nova reserva pendente') and on payment (owner gets booking_paid '💰 Pagamento recebido', renter gets booking_confirmed '✓ Reserva confirmada'), admin suspend user (sets suspended=true, pauses ALL their vehicles, clears sessions, login → 403 'Conta suspensa'), unsuspend restores login, cannot suspend admin (400), admin analytics has top_vehicles/top_owners/underperforming_owners/categories/bookings_by_status with correct sort (categories desc by count, top_owners desc by gmv), analytics requires admin (403 for renter), google session 400/401 contract preserved. Frontend Playwright: homepage shows 'DriveHub' with no LOCAFACIL remnants; owner navbar shows only 'Meus veículos' + 'Adicionar veículo' + 'Como funciona' (no 'Encontrar carro'); notif-bell renders; OwnerDashboard renders 8 edit-veh-*/toggle-veh-*/del-veh-* buttons for the 8 seeded vehicles; clicking edit opens edit-vehicle-modal; on vehicle detail as owner, clicking 'Reservar' surfaces 'proprietário não podem reservar' toast without POST /api/bookings; admin login lands on /admin which shows 'Analytics — quem está performando' with top-veh-* / top-owner-* / under-owner-* / category distribution (Suv 2, Minivan 1, Ev 1...) rendered correctly.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration4_drivehub.py",
+    "/app/test_reports/pytest/iteration4_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py now 1343 lines — repeatedly flagged since iter1. Split into routers/{auth,vehicles,bookings,notifications,admin}.py is overdue.",
+    "seed() does NOT migrate an existing admin row when ADMIN_EMAIL env changes; if a prior deployment had admin@locafacil.com.br in the DB it would still be able to log in. In this environment the row was cleaned, so the 401 test passed — but on prod DBs the old admin should be explicitly removed/suspended by a migration script.",
+    "push_notification writes are best-effort with no error handling — if the notifications collection insert fails, the booking/payment flow still succeeds silently. Consider try/except with warn log.",
+    "GET /api/notifications/mine hardcodes limit=50 but exposes ?limit query — no upper bound. Add max=200 to prevent abuse.",
+    "toggle-vehicle-status has no state validation — an owner could toggle a 'deleted' vehicle back to 'active' (delete is soft). Guard: reject if current status=='deleted'.",
+    "VehiclePatchIn does not allow status change (good — forces use of toggle/delete) but also does not allow updating brand/model/year/plate/category/transmission — consider whether owners should be able to fix typos here or force admin help.",
+    "admin_suspend_user pauses vehicles but unsuspend does NOT restore them — matches spec, but a suspended user's vehicles will silently be hidden forever unless they manually toggle each. UI should surface this on unsuspend confirmation.",
+    "get_vehicle (line 517) only decodes JWT access_token for include_exact_location — session_token (Google) cookie is ignored, so a Google-admin viewing a vehicle detail won't get exact coordinates. Minor consistency bug.",
+    "admin analytics 'underperforming_owners' excludes anyone appearing in top_owners' top-10 GMV list — a mid-tier active owner (rank 11+) will incorrectly appear as 'underperforming'. Consider filtering by 'zero paid bookings' explicitly instead.",
+    "CORS_ORIGINS='*' with allow_credentials=True is a browser-rejected combo — currently works because Emergent proxy sets Origin, but production should whitelist explicit origins."
+  ],
+  "updated_files": ["/app/backend/tests/test_iteration4_drivehub.py"],
+  "success_rate": {"backend": "100% (19/19)", "frontend": "100% (all iter4 UI items verified live)"},
+  "test_credentials": "admin@drivehub.com.br / DriveHub@2026 · proprietario@teste.com / Teste@2026 · locatario@teste.com / Teste@2026",
+  "seed_data_creation": "Test-owner user 'TEST_suspendowner@teste.com' + one temp vehicle created and cleaned up in TestAdminSuspend fixture. All test-created vehicles (brand='TEST'/'TESTX') soft-deleted; test bookings deleted directly via pymongo teardown.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter4 introduced: PATCH/toggle-status/DELETE on /api/vehicles, notifications collection with auto-triggers from booking create + pay, admin suspend/unsuspend/analytics, DriveHub rebrand. New pytest file: /app/backend/tests/test_iteration4_drivehub.py (19 tests). All 4 iterations of tests can be run together: pytest /app/backend/tests/ -v (52+19=71 tests). Data-testids on frontend confirmed live: notif-bell, edit-veh-{id}, toggle-veh-{id}, del-veh-{id}, edit-vehicle-modal, top-veh-{i}, top-owner-{i}, under-owner-{owner_id}.",
+  "rca of the issue": "N/A — no defects found."
+}
