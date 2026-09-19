@@ -25,11 +25,11 @@ db = client[os.environ['DB_NAME']]
 JWT_SECRET = os.environ['JWT_SECRET']
 JWT_ALGORITHM = "HS256"
 
-app = FastAPI(title="LOCAFACIL API")
+app = FastAPI(title="DriveHub API")
 api = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("locafacil")
+logger = logging.getLogger("drivehub")
 
 
 # ------------- Helpers -------------
@@ -254,6 +254,15 @@ class AdminConfigIn(BaseModel):
     commission_pct: float = Field(ge=0, le=50)
 
 
+# ------------- Notifications helpers -------------
+async def push_notification(user_id: str, kind: str, title: str, body: str, link: str = ""):
+    await db.notifications.insert_one({
+        "id": new_id(), "user_id": user_id, "kind": kind,
+        "title": title, "body": body, "link": link,
+        "read": False, "created_at": now_iso(),
+    })
+
+
 # ------------- Config / Commission -------------
 async def get_commission_pct() -> float:
     cfg = await db.config.find_one({"key": "commission_pct"})
@@ -294,6 +303,8 @@ async def login(data: LoginIn, response: Response):
     user = await db.users.find_one({"email": email})
     if not user or not verify_pw(data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="E-mail ou senha inválidos")
+    if user.get("suspended"):
+        raise HTTPException(status_code=403, detail="Conta suspensa. Entre em contato com o suporte.")
     token = create_access(user["id"], email, user["role"])
     set_auth_cookie(response, token)
     return {"user": sanitize_user(user), "token": token}
@@ -520,6 +531,89 @@ async def my_vehicles(user: dict = Depends(require_role("owner", "admin"))):
     return [public_vehicle(d, include_exact_location=True) for d in docs]
 
 
+class VehiclePatchIn(BaseModel):
+    daily_price: Optional[float] = None
+    weekly_price: Optional[float] = None
+    monthly_price: Optional[float] = None
+    deposit: Optional[float] = None
+    included_km_per_day: Optional[int] = None
+    extra_km_price: Optional[float] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    neighborhood: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    photos: Optional[List[str]] = None
+    features: Optional[List[str]] = None
+    rules: Optional[List[str]] = None
+    allow_pets: Optional[bool] = None
+    allow_interstate: Optional[bool] = None
+    airport_pickup: Optional[bool] = None
+    delivery_available: Optional[bool] = None
+    delivery_fee: Optional[float] = None
+
+
+@api.patch("/vehicles/{vid}")
+async def patch_vehicle(vid: str, data: VehiclePatchIn, user: dict = Depends(get_current_user)):
+    v = await db.vehicles.find_one({"id": vid})
+    if not v:
+        raise HTTPException(404, "Veículo não encontrado")
+    if user["role"] != "admin" and v["owner_id"] != user["id"]:
+        raise HTTPException(403, "Você não pode editar este veículo")
+    updates = {k: val for k, val in data.model_dump().items() if val is not None}
+    if updates:
+        updates["updated_at"] = now_iso()
+        await db.vehicles.update_one({"id": vid}, {"$set": updates})
+    fresh = await db.vehicles.find_one({"id": vid})
+    return public_vehicle(fresh, include_exact_location=True)
+
+
+@api.post("/vehicles/{vid}/toggle-status")
+async def toggle_vehicle_status(vid: str, user: dict = Depends(get_current_user)):
+    v = await db.vehicles.find_one({"id": vid})
+    if not v:
+        raise HTTPException(404, "Veículo não encontrado")
+    if user["role"] != "admin" and v["owner_id"] != user["id"]:
+        raise HTTPException(403, "Sem permissão")
+    new_status = "paused" if v.get("status", "active") == "active" else "active"
+    await db.vehicles.update_one({"id": vid}, {"$set": {"status": new_status}})
+    return {"ok": True, "status": new_status}
+
+
+@api.delete("/vehicles/{vid}")
+async def delete_vehicle(vid: str, user: dict = Depends(get_current_user)):
+    v = await db.vehicles.find_one({"id": vid})
+    if not v:
+        raise HTTPException(404, "Veículo não encontrado")
+    if user["role"] != "admin" and v["owner_id"] != user["id"]:
+        raise HTTPException(403, "Sem permissão")
+    # soft delete
+    await db.vehicles.update_one({"id": vid}, {"$set": {"status": "deleted"}})
+    return {"ok": True}
+
+
+# ------------- Notifications -------------
+@api.get("/notifications/mine")
+async def my_notifications(user: dict = Depends(get_current_user), limit: int = 50):
+    docs = await db.notifications.find({"user_id": user["id"]}).sort("created_at", -1).limit(limit).to_list(limit)
+    for d in docs:
+        d.pop("_id", None)
+    unread = await db.notifications.count_documents({"user_id": user["id"], "read": False})
+    return {"items": docs, "unread": unread}
+
+
+@api.post("/notifications/read-all")
+async def read_all_notifications(user: dict = Depends(get_current_user)):
+    r = await db.notifications.update_many({"user_id": user["id"], "read": False}, {"$set": {"read": True}})
+    return {"ok": True, "updated": r.modified_count}
+
+
+@api.post("/notifications/{nid}/read")
+async def read_notification(nid: str, user: dict = Depends(get_current_user)):
+    await db.notifications.update_one({"id": nid, "user_id": user["id"]}, {"$set": {"read": True}})
+    return {"ok": True}
+
+
 # ------------- Bookings -------------
 def parse_date(s: str) -> datetime:
     return datetime.fromisoformat(s.replace("Z", "+00:00"))
@@ -579,6 +673,13 @@ async def create_booking(data: BookingIn, user: dict = Depends(require_role("ren
     }
     await db.bookings.insert_one(b)
     b.pop("_id", None)
+    # notify owner immediately
+    await push_notification(
+        v["owner_id"], "booking_requested",
+        "Nova reserva pendente",
+        f"{user['name']} reservou {v['brand']} {v['model']} de {data.start_date} a {data.end_date}. Aguardando pagamento.",
+        f"/reserva/{b['id']}",
+    )
     return b
 
 
@@ -657,6 +758,20 @@ async def pay_booking(bid: str, user: dict = Depends(get_current_user)):
         "id": new_id(), "booking_id": bid, **payment, "renter_id": b["renter_id"],
         "owner_id": b["owner_id"], "created_at": now_iso(),
     })
+    # notify owner: payment received
+    await push_notification(
+        b["owner_id"], "booking_paid",
+        "💰 Pagamento recebido",
+        f"Reserva de {b['renter_name']} paga: {format(b['pricing']['owner_amount'], '.2f')} BRL líquidos para você. Combine a retirada.",
+        f"/reserva/{bid}",
+    )
+    # notify renter: payment confirmation
+    await push_notification(
+        b["renter_id"], "booking_confirmed",
+        "✓ Reserva confirmada",
+        f"Pagamento processado. Agora você pode combinar a retirada com {b['owner_name']} pelo WhatsApp.",
+        f"/reserva/{bid}",
+    )
     return {"ok": True, "payment": payment}
 
 
@@ -919,6 +1034,101 @@ async def verify_vehicle(vid: str, user: dict = Depends(require_role("admin"))):
     return {"ok": True}
 
 
+@api.post("/admin/users/{uid}/suspend")
+async def admin_suspend_user(uid: str, user: dict = Depends(require_role("admin"))):
+    u = await db.users.find_one({"id": uid})
+    if not u:
+        raise HTTPException(404, "Usuário não encontrado")
+    if u.get("role") == "admin":
+        raise HTTPException(400, "Não é possível suspender outro admin")
+    await db.users.update_one({"id": uid}, {"$set": {"suspended": True, "suspended_at": now_iso()}})
+    # Also pause all their vehicles
+    await db.vehicles.update_many({"owner_id": uid}, {"$set": {"status": "paused"}})
+    # Clear their active sessions
+    await db.sessions.delete_many({"user_id": uid})
+    await push_notification(uid, "account_suspended", "Conta suspensa",
+                             "Sua conta foi suspensa. Entre em contato com o suporte.", "/perfil")
+    return {"ok": True}
+
+
+@api.post("/admin/users/{uid}/unsuspend")
+async def admin_unsuspend_user(uid: str, user: dict = Depends(require_role("admin"))):
+    await db.users.update_one({"id": uid}, {"$set": {"suspended": False}, "$unset": {"suspended_at": ""}})
+    return {"ok": True}
+
+
+@api.get("/admin/analytics")
+async def admin_analytics(user: dict = Depends(require_role("admin"))):
+    # Top rented vehicles (by paid bookings count)
+    top_vehicles = await db.bookings.aggregate([
+        {"$match": {"status": {"$in": ["confirmed", "checked_in", "completed"]}}},
+        {"$group": {
+            "_id": "$vehicle_id",
+            "bookings": {"$sum": 1},
+            "gmv": {"$sum": "$pricing.subtotal"},
+            "vehicle": {"$first": "$vehicle_snapshot"},
+        }},
+        {"$sort": {"bookings": -1}}, {"$limit": 10},
+    ]).to_list(10)
+    top_vehicles = [{
+        "vehicle_id": t["_id"], "bookings": t["bookings"],
+        "gmv": round(t["gmv"], 2),
+        "label": f"{t['vehicle'].get('brand','')} {t['vehicle'].get('model','')} ({t['vehicle'].get('year','')})",
+        "photo": t["vehicle"].get("photo"),
+    } for t in top_vehicles]
+
+    # Top owners by GMV
+    top_owners_agg = await db.bookings.aggregate([
+        {"$match": {"status": {"$in": ["confirmed", "checked_in", "completed"]}}},
+        {"$group": {
+            "_id": "$owner_id",
+            "bookings": {"$sum": 1},
+            "gmv": {"$sum": "$pricing.subtotal"},
+            "earnings": {"$sum": "$pricing.owner_amount"},
+            "owner_name": {"$first": "$owner_name"},
+        }},
+        {"$sort": {"gmv": -1}}, {"$limit": 10},
+    ]).to_list(10)
+    top_owners = [{"owner_id": t["_id"], "name": t["owner_name"],
+                    "bookings": t["bookings"],
+                    "gmv": round(t["gmv"], 2),
+                    "earnings": round(t["earnings"], 2)} for t in top_owners_agg]
+
+    # Owners with vehicles but zero bookings (need help)
+    owners_with_vehicles = await db.vehicles.aggregate([
+        {"$match": {"status": {"$in": ["active", "paused"]}}},
+        {"$group": {"_id": "$owner_id", "vehicles": {"$sum": 1},
+                     "owner_name": {"$first": "$owner_name"}}},
+    ]).to_list(500)
+    active_owner_ids = {t["owner_id"] for t in top_owners}
+    underperforming = [
+        {"owner_id": o["_id"], "name": o["owner_name"], "vehicles": o["vehicles"]}
+        for o in owners_with_vehicles if o["_id"] not in active_owner_ids
+    ][:10]
+
+    # Category distribution
+    cats = await db.vehicles.aggregate([
+        {"$match": {"status": "active"}},
+        {"$group": {"_id": "$category", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+    ]).to_list(20)
+    categories = [{"category": c["_id"], "count": c["count"]} for c in cats if c["_id"]]
+
+    # Bookings by status
+    status_agg = await db.bookings.aggregate([
+        {"$group": {"_id": "$status", "count": {"$sum": 1}}},
+    ]).to_list(10)
+    by_status = {s["_id"]: s["count"] for s in status_agg}
+
+    return {
+        "top_vehicles": top_vehicles,
+        "top_owners": top_owners,
+        "underperforming_owners": underperforming,
+        "categories": categories,
+        "bookings_by_status": by_status,
+    }
+
+
 # ------------- Seed -------------
 @api.get("/sitemap.xml")
 async def sitemap(request: Request):
@@ -979,7 +1189,7 @@ async def seed():
     admin_pw = os.environ["ADMIN_PASSWORD"]
     if not await db.users.find_one({"email": admin_email}):
         await db.users.insert_one({
-            "id": new_id(), "email": admin_email, "name": "Admin LOCAFACIL",
+            "id": new_id(), "email": admin_email, "name": "Admin DriveHub",
             "phone": "", "whatsapp": "", "instagram": "", "facebook": "", "bio": "",
             "role": "admin", "password_hash": hash_pw(admin_pw),
             "kyc_level": "approved", "kyc_data": None, "avatar": "", "created_at": now_iso(),
@@ -1113,7 +1323,7 @@ async def seed():
 @app.on_event("startup")
 async def startup():
     await seed()
-    logger.info("LOCAFACIL API ready")
+    logger.info("DriveHub API ready")
 
 
 # mount router + CORS

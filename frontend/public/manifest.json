@@ -1,10 +1,10 @@
 {
-  "short_name": "LOCAFACIL",
-  "name": "LOCAFACIL — Aluguel de carros no Brasil",
+  "short_name": "DriveHub",
+  "name": "DriveHub — Aluguel de carros no Brasil",
   "description": "Marketplace de locação de veículos entre pessoas e empresas.",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#FF5A00",
+  "theme_color": "#003366",
   "background_color": "#ffffff",
   "orientation": "portrait-primary",
   "lang": "pt-BR",

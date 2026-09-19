@@ -1,17 +1,21 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Car, User, SignOut, ChartBar, House, MagnifyingGlass, Plus } from "@phosphor-icons/react";
+import { Car, User, SignOut, ChartBar, Plus } from "@phosphor-icons/react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const loc = useLocation();
   const showHeroTransparent = loc.pathname === "/";
+  const isOwner = user?.role === "owner";
+  const isRenter = user?.role === "renter";
+  const isAdmin = user?.role === "admin";
 
   return (
     <header
@@ -22,40 +26,52 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
         <Link to="/" data-testid="logo-link" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-md bg-[hsl(22,100%,50%)] flex items-center justify-center transition-transform group-hover:rotate-3">
-            <Car weight="fill" size={22} className="text-white" />
+          <div className="w-9 h-9 rounded-md bg-[hsl(210,100%,22%)] flex items-center justify-center transition-transform group-hover:rotate-3">
+            <Car weight="fill" size={22} className="text-[hsl(180,90%,60%)]" />
           </div>
-          <span className="font-display text-2xl font-black tracking-tight">
-            LOCAFACIL
+          <span className="font-display text-2xl font-black tracking-tight text-[hsl(210,100%,22%)]">
+            Drive<span className="text-[hsl(180,90%,45%)]">Hub</span>
           </span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-          <Link to="/buscar" data-testid="nav-search" className="hover:text-[hsl(22,100%,50%)] transition-colors">Encontrar carro</Link>
-          {user && user.role === "owner" && (
-            <Link to="/proprietario" data-testid="nav-owner" className="hover:text-[hsl(22,100%,50%)] transition-colors">Meus veículos</Link>
+          {/* Owners don't rent — hide search link for pure owners */}
+          {!isOwner && (
+            <Link to="/buscar" data-testid="nav-search" className="hover:text-[hsl(210,100%,22%)] transition-colors">
+              Encontrar carro
+            </Link>
           )}
-          {user && user.role === "renter" && (
-            <Link to="/minhas-reservas" data-testid="nav-my-bookings" className="hover:text-[hsl(22,100%,50%)] transition-colors">Minhas reservas</Link>
+          {isOwner && (
+            <>
+              <Link to="/proprietario" data-testid="nav-owner" className="hover:text-[hsl(210,100%,22%)] transition-colors">Meus veículos</Link>
+              <Link to="/anuncie" data-testid="nav-add-veh" className="hover:text-[hsl(210,100%,22%)] transition-colors">Adicionar veículo</Link>
+            </>
           )}
-          {user && user.role === "admin" && (
-            <Link to="/admin" data-testid="nav-admin" className="hover:text-[hsl(22,100%,50%)] transition-colors">Admin</Link>
+          {isRenter && (
+            <Link to="/minhas-reservas" data-testid="nav-my-bookings" className="hover:text-[hsl(210,100%,22%)] transition-colors">Minhas reservas</Link>
           )}
-          <Link to="/como-funciona" data-testid="nav-how" className="hover:text-[hsl(22,100%,50%)] transition-colors">Como funciona</Link>
+          {isAdmin && (
+            <>
+              <Link to="/admin" data-testid="nav-admin" className="hover:text-[hsl(210,100%,22%)] transition-colors">Admin</Link>
+              <Link to="/buscar" data-testid="nav-search-admin" className="hover:text-[hsl(210,100%,22%)] transition-colors">Veículos</Link>
+            </>
+          )}
+          <Link to="/como-funciona" data-testid="nav-how" className="hover:text-[hsl(210,100%,22%)] transition-colors">Como funciona</Link>
         </nav>
 
         <div className="flex items-center gap-2">
-          {user && user.role !== "owner" && (
+          {!user && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => nav("/anuncie")}
+              onClick={() => nav("/cadastro")}
               data-testid="btn-become-owner"
               className="hidden md:inline-flex"
             >
               <Plus size={16} className="mr-1" /> Anunciar carro
             </Button>
           )}
+          {user && <NotificationBell />}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -70,17 +86,17 @@ export default function Navbar() {
                 <DropdownMenuItem onClick={() => nav("/perfil")} data-testid="menu-profile">
                   <User className="mr-2" size={16} /> Meu perfil
                 </DropdownMenuItem>
-                {user.role === "renter" && (
+                {isRenter && (
                   <DropdownMenuItem onClick={() => nav("/minhas-reservas")} data-testid="menu-bookings">
                     <Car className="mr-2" size={16} /> Reservas
                   </DropdownMenuItem>
                 )}
-                {user.role === "owner" && (
+                {isOwner && (
                   <DropdownMenuItem onClick={() => nav("/proprietario")} data-testid="menu-owner">
                     <ChartBar className="mr-2" size={16} /> Painel proprietário
                   </DropdownMenuItem>
                 )}
-                {user.role === "admin" && (
+                {isAdmin && (
                   <DropdownMenuItem onClick={() => nav("/admin")} data-testid="menu-admin">
                     <ChartBar className="mr-2" size={16} /> Painel admin
                   </DropdownMenuItem>
@@ -100,7 +116,7 @@ export default function Navbar() {
                 size="sm"
                 onClick={() => nav("/cadastro")}
                 data-testid="btn-signup"
-                className="bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)] text-white"
+                className="bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)] text-white"
               >
                 Criar conta
               </Button>

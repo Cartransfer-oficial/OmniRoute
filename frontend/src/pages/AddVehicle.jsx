@@ -66,7 +66,7 @@ export default function AddVehicle() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 pb-24" data-testid="add-vehicle-page">
-      <span className="overline text-[hsl(22,100%,50%)]">Novo anúncio</span>
+      <span className="overline text-[hsl(210,100%,22%)]">Novo anúncio</span>
       <h1 className="font-display text-3xl md:text-4xl font-black mt-1">Cadastre seu veículo</h1>
       <p className="text-muted-foreground mt-2">Preencha os dados. Nossa equipe revisa e libera o anúncio.</p>
 
@@ -154,7 +154,7 @@ export default function AddVehicle() {
           <p className="text-xs text-muted-foreground">Dica: hospede fotos no Imgur/Cloudinary e cole os links aqui.</p>
         </section>
 
-        <Button type="submit" disabled={loading} className="w-full h-12 bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)] text-white font-bold" data-testid="av-submit">
+        <Button type="submit" disabled={loading} className="w-full h-12 bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)] text-white font-bold" data-testid="av-submit">
           {loading ? "Enviando..." : "Publicar veículo"}
         </Button>
       </form>

@@ -39,7 +39,7 @@ function Filters({ filters, setFilters, applyReload }) {
         <Label className="overline block mb-2">Categoria</Label>
         <div className="grid grid-cols-2 gap-2">
           {CATEGORIES.map((c) => (
-            <label key={c.k} className={`border p-2 text-xs cursor-pointer transition-colors ${filters.category === c.k ? "border-[hsl(22,100%,50%)] bg-orange-50 text-[hsl(22,100%,40%)] font-medium" : "border-border hover:border-neutral-400"}`}>
+            <label key={c.k} className={`border p-2 text-xs cursor-pointer transition-colors ${filters.category === c.k ? "border-[hsl(210,100%,22%)] bg-sky-50 text-[hsl(210,100%,18%)] font-medium" : "border-border hover:border-neutral-400"}`}>
               <input
                 type="radio"
                 name="category"
@@ -67,7 +67,7 @@ function Filters({ filters, setFilters, applyReload }) {
               key={t.k}
               data-testid={`filter-trans-${t.k || "all"}`}
               onClick={() => setFilters({ ...filters, transmission: t.k })}
-              className={`px-3 py-1.5 text-xs border ${filters.transmission === t.k ? "border-[hsl(22,100%,50%)] bg-orange-50 text-[hsl(22,100%,40%)]" : "border-border"}`}
+              className={`px-3 py-1.5 text-xs border ${filters.transmission === t.k ? "border-[hsl(210,100%,22%)] bg-sky-50 text-[hsl(210,100%,18%)]" : "border-border"}`}
             >
               {t.l}
             </button>
@@ -82,7 +82,7 @@ function Filters({ filters, setFilters, applyReload }) {
             <button
               key={n}
               onClick={() => setFilters({ ...filters, min_seats: filters.min_seats === n ? 0 : n })}
-              className={`w-11 h-11 border ${filters.min_seats === n ? "border-[hsl(22,100%,50%)] bg-orange-50 text-[hsl(22,100%,40%)] font-bold" : "border-border"}`}
+              className={`w-11 h-11 border ${filters.min_seats === n ? "border-[hsl(210,100%,22%)] bg-sky-50 text-[hsl(210,100%,18%)] font-bold" : "border-border"}`}
               data-testid={`filter-seats-${n}`}
             >
               {n}+
@@ -135,7 +135,7 @@ function Filters({ filters, setFilters, applyReload }) {
         </label>
       </div>
 
-      <Button className="w-full bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)]" onClick={applyReload} data-testid="apply-filters">Aplicar filtros</Button>
+      <Button className="w-full bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)]" onClick={applyReload} data-testid="apply-filters">Aplicar filtros</Button>
     </div>
   );
 }
@@ -184,7 +184,7 @@ export default function Search() {
       <SEO
         title={filters.city ? `Aluguel de carros em ${filters.city}` : "Buscar carros para alugar"}
         description={filters.city
-          ? `Encontre carros para alugar em ${filters.city}. Filtre por categoria, câmbio, capacidade e preço. Pagamento seguro pela LOCAFACIL.`
+          ? `Encontre carros para alugar em ${filters.city}. Filtre por categoria, câmbio, capacidade e preço. Pagamento seguro pela DriveHub.`
           : "Busca inteligente por localização, datas e características. Encontre SUV, sedan, 7 lugares, elétrico ou econômico com proprietários verificados."}
       />
       <div className="mb-6"><SearchBar /></div>

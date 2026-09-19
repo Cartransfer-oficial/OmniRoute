@@ -1,4 +1,4 @@
-"""LOCAFACIL iteration 3: Emergent Google Auth integration tests.
+"""DriveHub iteration 3: Emergent Google Auth integration tests.
 
 Covers:
 - POST /api/auth/google/session contract (400 missing header, 401 invalid session_id)
@@ -23,9 +23,9 @@ assert BASE_URL.startswith("http"), "REACT_APP_BACKEND_URL must be set"
 API = f"{BASE_URL}/api"
 
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
-DB_NAME = os.environ.get("DB_NAME", "locafacil")
+DB_NAME = os.environ.get("DB_NAME", "drivehub")
 
-ADMIN = ("admin@locafacil.com.br", "Locafacil@2026")
+ADMIN = ("admin@drivehub.com.br", "DriveHub@2026")
 ADMIN_GOOGLE_EMAIL = "tailansantos06@gmail.com"
 
 

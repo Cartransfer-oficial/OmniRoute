@@ -31,7 +31,7 @@ export default function VehicleCard({ v }) {
             </Badge>
           )}
         </div>
-        <div className="absolute bottom-3 right-3 bg-[hsl(22,100%,50%)] text-white px-3 py-1.5 text-sm font-bold font-display">
+        <div className="absolute bottom-3 right-3 bg-[hsl(210,100%,22%)] text-white px-3 py-1.5 text-sm font-bold font-display">
           {formatBRL(v.daily_price)}<span className="text-xs font-medium opacity-90">/dia</span>
         </div>
       </div>

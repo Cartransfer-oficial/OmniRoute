@@ -15,7 +15,7 @@ L.Icon.Default.mergeOptions({
 const priceIcon = (price) =>
   L.divIcon({
     className: "custom-price-marker",
-    html: `<div style="background:#FF5A00;color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px;font-family:'Cabinet Grotesk',sans-serif;box-shadow:0 4px 12px rgba(0,0,0,0.2);white-space:nowrap;border:2px solid white;">${formatBRL(price)}</div>`,
+    html: `<div style="background:#003366;color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px;font-family:'Cabinet Grotesk',sans-serif;box-shadow:0 4px 12px rgba(0,0,0,0.2);white-space:nowrap;border:2px solid white;">${formatBRL(price)}</div>`,
     iconSize: [80, 30],
     iconAnchor: [40, 30],
   });
@@ -41,8 +41,8 @@ export default function VehicleMap({ vehicles, center = [-14.235, -51.9253], zoo
                 <img src={v.photos?.[0]} alt="" style={{ width: "100%", height: 90, objectFit: "cover", marginBottom: 6 }} />
                 <div style={{ fontWeight: 700 }}>{v.brand} {v.model}</div>
                 <div style={{ fontSize: 12, color: "#666" }}>{v.city}, {v.state}</div>
-                <div style={{ fontWeight: 700, color: "#FF5A00", marginTop: 4 }}>{formatBRL(v.daily_price)}/dia</div>
-                <Link to={`/veiculo/${v.id}`} style={{ color: "#FF5A00", fontWeight: 600, fontSize: 12 }}>Ver detalhes →</Link>
+                <div style={{ fontWeight: 700, color: "#003366", marginTop: 4 }}>{formatBRL(v.daily_price)}/dia</div>
+                <Link to={`/veiculo/${v.id}`} style={{ color: "#003366", fontWeight: 600, fontSize: 12 }}>Ver detalhes →</Link>
               </div>
             </Popup>
           </Marker>

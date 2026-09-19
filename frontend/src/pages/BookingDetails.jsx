@@ -58,8 +58,8 @@ export default function BookingDetails() {
     if (!clean) return null;
     const other = isRenter ? b.owner_contact : b.renter_contact;
     const greeting = isRenter
-      ? `Olá ${b.owner_name}! Sou ${b.renter_name}, acabei de reservar seu ${b.vehicle_snapshot.brand} ${b.vehicle_snapshot.model} pelo LOCAFACIL.`
-      : `Olá ${b.renter_name}! Sou ${b.owner_name}, proprietário do ${b.vehicle_snapshot.brand} ${b.vehicle_snapshot.model} que você reservou pelo LOCAFACIL.`;
+      ? `Olá ${b.owner_name}! Sou ${b.renter_name}, acabei de reservar seu ${b.vehicle_snapshot.brand} ${b.vehicle_snapshot.model} pelo DriveHub.`
+      : `Olá ${b.renter_name}! Sou ${b.owner_name}, proprietário do ${b.vehicle_snapshot.brand} ${b.vehicle_snapshot.model} que você reservou pelo DriveHub.`;
     const msg = [
       greeting,
       "",
@@ -110,7 +110,7 @@ export default function BookingDetails() {
       <Link to={isRenter ? "/minhas-reservas" : "/proprietario"} className="text-sm text-muted-foreground hover:underline">← Voltar</Link>
       <div className="flex items-start justify-between mt-2 gap-4 flex-wrap">
         <div>
-          <span className="overline text-[hsl(22,100%,50%)]">Reserva #{b.id.slice(0, 8)}</span>
+          <span className="overline text-[hsl(210,100%,22%)]">Reserva #{b.id.slice(0, 8)}</span>
           <h1 className="font-display text-3xl md:text-4xl font-black mt-1">{b.vehicle_snapshot.brand} {b.vehicle_snapshot.model}</h1>
           <p className="text-muted-foreground">{formatDate(b.start_date)} → {formatDate(b.end_date)} · {b.pricing.days} diárias</p>
         </div>
@@ -194,7 +194,7 @@ export default function BookingDetails() {
 
               {b.pickup_address && (
                 <div className="mt-3 flex items-center gap-2 text-sm">
-                  <MapPin size={16} className="text-[hsl(22,100%,50%)]" />
+                  <MapPin size={16} className="text-[hsl(210,100%,22%)]" />
                   <span><b>Local de retirada:</b> {b.pickup_address}</span>
                 </div>
               )}
@@ -223,7 +223,7 @@ export default function BookingDetails() {
             <h3 className="font-display font-bold text-lg mb-3">Ações</h3>
             <div className="space-y-2">
               {b.status === "pending_payment" && isRenter && (
-                <Button onClick={pay} disabled={paying} className="w-full bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)]" data-testid="btn-pay">
+                <Button onClick={pay} disabled={paying} className="w-full bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)]" data-testid="btn-pay">
                   {paying ? "Processando..." : `Pagar ${formatBRL(b.pricing.total)}`}
                 </Button>
               )}
@@ -251,7 +251,7 @@ export default function BookingDetails() {
             {msgs.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Nenhuma mensagem ainda.</p>}
             {msgs.map((m) => (
               <div key={m.id} className={`flex ${m.from_id === user.id ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[75%] p-3 text-sm ${m.from_id === user.id ? "bg-[hsl(22,100%,50%)] text-white" : "bg-white border border-border"}`}>
+                <div className={`max-w-[75%] p-3 text-sm ${m.from_id === user.id ? "bg-[hsl(210,100%,22%)] text-white" : "bg-white border border-border"}`}>
                   <p className="text-[10px] opacity-70 mb-1">{m.from_name}</p>
                   {m.body}
                   {m.flagged && <p className="text-[10px] mt-1 opacity-80">⚠ Dados de contato bloqueados</p>}
@@ -261,25 +261,25 @@ export default function BookingDetails() {
           </div>
           <form onSubmit={send} className="mt-3 flex gap-2">
             <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Escreva uma mensagem..." data-testid="chat-input" />
-            <Button type="submit" className="bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)]" data-testid="chat-send">Enviar</Button>
+            <Button type="submit" className="bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)]" data-testid="chat-send">Enviar</Button>
           </form>
           <p className="text-[10px] text-muted-foreground mt-1">Por segurança, telefones e e-mails são ocultados automaticamente. Toda negociação deve permanecer na plataforma.</p>
         </TabsContent>
 
         <TabsContent value="contract" className="mt-6">
           <div className="border border-border p-8 bg-white font-serif leading-relaxed text-sm">
-            <h2 className="font-display text-xl font-black mb-4">CONTRATO DE LOCAÇÃO ENTRE PARTICULARES — LOCAFACIL</h2>
+            <h2 className="font-display text-xl font-black mb-4">CONTRATO DE LOCAÇÃO ENTRE PARTICULARES — DriveHub</h2>
             <p><strong>LOCADOR (proprietário):</strong> {b.owner_name}</p>
             <p><strong>LOCATÁRIO:</strong> {b.renter_name}</p>
             <p><strong>VEÍCULO:</strong> {b.vehicle_snapshot.brand} {b.vehicle_snapshot.model} ({b.vehicle_snapshot.year})</p>
             <p><strong>PERÍODO:</strong> {formatDate(b.start_date)} até {formatDate(b.end_date)} ({b.pricing.days} diárias)</p>
             <p><strong>VALOR:</strong> {formatBRL(b.pricing.subtotal)} · Caução: {formatBRL(b.pricing.deposit)} · Total: {formatBRL(b.pricing.total)}</p>
             <hr className="my-4" />
-            <p>1. A LOCAFACIL atua exclusivamente como marketplace tecnológico intermediador, não sendo proprietária do veículo nem parte na relação locatícia.</p>
+            <p>1. A DriveHub atua exclusivamente como marketplace tecnológico intermediador, não sendo proprietária do veículo nem parte na relação locatícia.</p>
             <p className="mt-2">2. O LOCATÁRIO se compromete a utilizar o veículo conforme legislação de trânsito, devolvê-lo nas mesmas condições e responder por avarias, multas e danos causados durante o período.</p>
             <p className="mt-2">3. O LOCADOR garante a legitimidade da posse, documentação em dia e condições mecânicas adequadas para circulação.</p>
             <p className="mt-2">4. Cancelamento gratuito até 48h antes da retirada. Após esse prazo, aplicam-se as regras da política de cancelamento.</p>
-            <p className="mt-2">5. Rescisão, ocorrências e demais cláusulas conforme Termos de Uso da LOCAFACIL.</p>
+            <p className="mt-2">5. Rescisão, ocorrências e demais cláusulas conforme Termos de Uso da DriveHub.</p>
             <p className="mt-6 text-[10px] text-muted-foreground">Aceite eletrônico registrado em {formatDate(b.contract_accepted_at)} — modelo para revisão jurídica antes do lançamento comercial.</p>
           </div>
         </TabsContent>

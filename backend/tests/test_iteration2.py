@@ -1,4 +1,4 @@
-"""LOCAFACIL iteration 2 tests: profile edit, admin detail modals, WhatsApp reveal, social fields."""
+"""DriveHub iteration 2 tests: profile edit, admin detail modals, WhatsApp reveal, social fields."""
 import os
 import time
 from datetime import datetime, timedelta
@@ -9,7 +9,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 assert BASE_URL.startswith('http'), "REACT_APP_BACKEND_URL must be set"
 API = f"{BASE_URL}/api"
 
-ADMIN = ("admin@locafacil.com.br", "Locafacil@2026")
+ADMIN = ("admin@drivehub.com.br", "DriveHub@2026")
 RENTER = ("locatario@teste.com", "Teste@2026")
 OWNER = ("proprietario@teste.com", "Teste@2026")
 

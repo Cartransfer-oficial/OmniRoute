@@ -1,4 +1,4 @@
-"""LOCAFACIL backend integration tests"""
+"""DriveHub backend integration tests"""
 import os
 import time
 import pytest
@@ -9,7 +9,7 @@ if not BASE_URL.startswith('http'):
     BASE_URL = 'https://aluguel-veiculos-br.preview.emergentagent.com'
 API = f"{BASE_URL}/api"
 
-ADMIN = ("admin@locafacil.com.br", "Locafacil@2026")
+ADMIN = ("admin@drivehub.com.br", "DriveHub@2026")
 RENTER = ("locatario@teste.com", "Teste@2026")
 OWNER = ("proprietario@teste.com", "Teste@2026")
 

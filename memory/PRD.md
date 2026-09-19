@@ -1,4 +1,4 @@
-# LOCAFACIL — Product Requirements Document
+# DriveHub — Product Requirements Document
 
 ## Concept
 Brazilian P2P/B2B vehicle rental marketplace. Transactional platform (not a car company), commission-based (10-15%). "Encontre o carro que você realmente precisa."
@@ -40,7 +40,7 @@ Brazilian P2P/B2B vehicle rental marketplace. Transactional platform (not a car 
 - FastAPI backend + MongoDB
 - React 19 + Tailwind + Shadcn + Leaflet + Framer Motion + Phosphor Icons
 - Fonts: Cabinet Grotesk (headings) + Satoshi (body) via Fontshare
-- Design: "Asphalt & Guaraná" — orange #FF5A00 primary, deep dark surfaces, sharp corners
+- Design: "Asphalt & Guaraná" — orange #003366 primary, deep dark surfaces, sharp corners
 
 ## Implemented (Feb 2026 — v1)
 - Complete auth flow with JWT cookies + admin seed

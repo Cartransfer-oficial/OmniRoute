@@ -41,7 +41,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 pb-24" data-testid="profile-page">
-      <span className="overline text-[hsl(22,100%,50%)]">Meu perfil</span>
+      <span className="overline text-[hsl(210,100%,22%)]">Meu perfil</span>
       <div className="flex items-start justify-between gap-4 mt-1 flex-wrap">
         <div>
           <h1 className="font-display text-3xl md:text-4xl font-black">{user.name}</h1>
@@ -71,7 +71,7 @@ export default function Profile() {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
-              <Button onClick={save} disabled={saving} className="bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)] flex-1" data-testid="p-save">
+              <Button onClick={save} disabled={saving} className="bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)] flex-1" data-testid="p-save">
                 {saving ? "Salvando..." : "Salvar alterações"}
               </Button>
             </div>
@@ -101,26 +101,26 @@ export default function Profile() {
           ))}
         </div>
         {user.role === "renter" && user.kyc_level !== "approved" && (
-          <Button asChild className="mt-4 bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)]" data-testid="btn-complete-kyc">
+          <Button asChild className="mt-4 bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)]" data-testid="btn-complete-kyc">
             <Link to="/verificacao"><IdentificationCard className="mr-2" />Concluir verificação</Link>
           </Button>
         )}
       </div>
 
       {user.role === "owner" && (
-        <div className="mt-6 border border-border p-6 bg-orange-50">
+        <div className="mt-6 border border-border p-6 bg-sky-50">
           <h2 className="font-display text-xl font-bold">Sua frota</h2>
           <p className="text-sm mt-1">Tem mais de um veículo? Você pode adicionar quantos quiser!</p>
           <div className="mt-3 flex gap-2">
-            <Button asChild className="bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)]" data-testid="btn-add-vehicle-profile"><Link to="/anuncie">Cadastrar novo veículo</Link></Button>
+            <Button asChild className="bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)]" data-testid="btn-add-vehicle-profile"><Link to="/anuncie">Cadastrar novo veículo</Link></Button>
             <Button asChild variant="outline"><Link to="/proprietario">Meus veículos</Link></Button>
           </div>
         </div>
       )}
 
       <div className="mt-6 border border-border p-6 bg-white">
-        <h2 className="font-display text-xl font-bold flex items-center gap-2 mb-3"><User weight="duotone" size={22} className="text-[hsl(22,100%,50%)]" />Meus dados (LGPD)</h2>
-        <p className="text-sm text-muted-foreground">Você pode solicitar o download completo dos seus dados pessoais tratados pela LOCAFACIL, correção ou exclusão de conta a qualquer momento.</p>
+        <h2 className="font-display text-xl font-bold flex items-center gap-2 mb-3"><User weight="duotone" size={22} className="text-[hsl(210,100%,22%)]" />Meus dados (LGPD)</h2>
+        <p className="text-sm text-muted-foreground">Você pode solicitar o download completo dos seus dados pessoais tratados pela DriveHub, correção ou exclusão de conta a qualquer momento.</p>
         <div className="mt-3 flex gap-2">
           <Button variant="outline" size="sm">Solicitar meus dados</Button>
           <Button variant="outline" size="sm">Excluir conta</Button>

@@ -36,8 +36,8 @@ export default function Login() {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 h-full flex flex-col justify-end p-12 text-white">
           <div className="flex items-center gap-2 mb-8">
-            <Car weight="fill" size={28} className="text-[hsl(22,100%,55%)]" />
-            <span className="font-display text-2xl font-black">LOCAFACIL</span>
+            <Car weight="fill" size={28} className="text-[hsl(180,90%,45%)]" />
+            <span className="font-display text-2xl font-black">DriveHub</span>
           </div>
           <h2 className="font-display text-4xl font-black leading-tight">
             Encontre o carro certo.<br />Onde estiver.
@@ -49,7 +49,7 @@ export default function Login() {
           <div>
             <h1 className="font-display text-3xl font-black">Entrar</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Não tem conta? <Link to="/cadastro" className="text-[hsl(22,100%,50%)] font-medium">Criar agora</Link>
+              Não tem conta? <Link to="/cadastro" className="text-[hsl(210,100%,22%)] font-medium">Criar agora</Link>
             </p>
           </div>
 
@@ -69,14 +69,14 @@ export default function Login() {
             <Label>Senha</Label>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required data-testid="login-password" />
           </div>
-          <Button type="submit" disabled={loading} className="w-full bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)]" data-testid="login-submit">
+          <Button type="submit" disabled={loading} className="w-full bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)]" data-testid="login-submit">
             {loading ? "Entrando..." : "Entrar"}
           </Button>
           <div className="mt-6 border border-dashed border-border p-3 text-xs bg-neutral-50">
             <p className="font-bold mb-1">Contas de teste:</p>
             <p>Locatário: <code>locatario@teste.com</code> / <code>Teste@2026</code></p>
             <p>Proprietário: <code>proprietario@teste.com</code> / <code>Teste@2026</code></p>
-            <p>Admin: <code>admin@locafacil.com.br</code> / <code>Locafacil@2026</code></p>
+            <p>Admin: <code>admin@drivehub.com.br</code> / <code>DriveHub@2026</code></p>
           </div>
         </form>
       </div>

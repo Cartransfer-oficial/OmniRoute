@@ -12,15 +12,15 @@ export default function HowItWorks() {
     <div className="max-w-4xl mx-auto px-4 md:px-8 py-16 pb-24" data-testid="how-page">
       <SEO
         title="Como funciona"
-        description="Aprenda como funciona o marketplace de aluguel de carros LOCAFACIL: cadastro, verificação, reserva com split de pagamento, contrato digital, check-in e check-out."
+        description="Aprenda como funciona o marketplace de aluguel de carros DriveHub: cadastro, verificação, reserva com split de pagamento, contrato digital, check-in e check-out."
       />
-      <span className="overline text-[hsl(22,100%,50%)]">Como funciona</span>
+      <span className="overline text-[hsl(210,100%,22%)]">Como funciona</span>
       <h1 className="font-display text-4xl md:text-6xl font-black mt-2 leading-tight">O marketplace de mobilidade do Brasil.</h1>
-      <p className="mt-6 text-lg text-muted-foreground max-w-2xl">A LOCAFACIL é <strong>intermediador tecnológico</strong> — não somos proprietários da frota. Conectamos pessoas e empresas com veículos verificados, contrato digital e pagamento seguro.</p>
+      <p className="mt-6 text-lg text-muted-foreground max-w-2xl">A DriveHub é <strong>intermediador tecnológico</strong> — não somos proprietários da frota. Conectamos pessoas e empresas com veículos verificados, contrato digital e pagamento seguro.</p>
       <div className="mt-12 space-y-8">
         {steps.map((s) => (
           <div key={s.n} className="grid grid-cols-[80px_1fr] gap-4 items-start">
-            <div className="font-display text-4xl font-black text-[hsl(22,100%,50%)]">{s.n}</div>
+            <div className="font-display text-4xl font-black text-[hsl(210,100%,22%)]">{s.n}</div>
             <div>
               <h3 className="font-display text-2xl font-bold">{s.t}</h3>
               <p className="mt-2 text-muted-foreground">{s.d}</p>

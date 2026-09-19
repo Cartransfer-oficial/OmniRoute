@@ -55,17 +55,17 @@ export default function KycFlow() {
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-8 pb-24" data-testid="kyc-page">
-      <span className="overline text-[hsl(22,100%,50%)]">Verificação de identidade</span>
+      <span className="overline text-[hsl(210,100%,22%)]">Verificação de identidade</span>
       <h1 className="font-display text-3xl md:text-4xl font-black mt-2">Complete seu perfil para reservar</h1>
       <p className="text-muted-foreground mt-2">Para sua segurança e a de todos, validamos dados essenciais antes da primeira reserva.</p>
 
       <div className="mt-8 flex items-center gap-2 mb-8">
         {STEPS.map((s, i) => (
           <div key={s.n} className="flex-1 flex items-center gap-2">
-            <div className={`w-10 h-10 flex items-center justify-center border font-bold ${step >= s.n ? "bg-[hsl(22,100%,50%)] text-white border-[hsl(22,100%,50%)]" : "border-border text-muted-foreground"}`}>
+            <div className={`w-10 h-10 flex items-center justify-center border font-bold ${step >= s.n ? "bg-[hsl(210,100%,22%)] text-white border-[hsl(210,100%,22%)]" : "border-border text-muted-foreground"}`}>
               <s.i size={20} />
             </div>
-            {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 ${step > s.n ? "bg-[hsl(22,100%,50%)]" : "bg-border"}`} />}
+            {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 ${step > s.n ? "bg-[hsl(210,100%,22%)]" : "bg-border"}`} />}
           </div>
         ))}
       </div>
@@ -81,7 +81,7 @@ export default function KycFlow() {
             <div><Label>Estado</Label><Input value={f.state} onChange={(e) => setF({ ...f, state: e.target.value })} placeholder="SP" data-testid="kyc-state" /></div>
             <div><Label>CEP</Label><Input value={f.cep} onChange={(e) => setF({ ...f, cep: e.target.value })} data-testid="kyc-cep" /></div>
           </div>
-          <Button disabled={!canNext1} onClick={() => setStep(2)} className="bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)] w-full mt-4" data-testid="kyc-next-1">Próximo</Button>
+          <Button disabled={!canNext1} onClick={() => setStep(2)} className="bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)] w-full mt-4" data-testid="kyc-next-1">Próximo</Button>
         </div>
       )}
       {step === 2 && (
@@ -99,7 +99,7 @@ export default function KycFlow() {
           </div>
           <div className="flex gap-2 mt-4">
             <Button variant="outline" onClick={() => setStep(1)}>Voltar</Button>
-            <Button disabled={!canNext2} onClick={() => setStep(3)} className="bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)] flex-1" data-testid="kyc-next-2">Próximo</Button>
+            <Button disabled={!canNext2} onClick={() => setStep(3)} className="bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)] flex-1" data-testid="kyc-next-2">Próximo</Button>
           </div>
         </div>
       )}
@@ -119,7 +119,7 @@ export default function KycFlow() {
           <p className="text-xs text-muted-foreground bg-neutral-50 border border-border p-3">Seus documentos são criptografados e usados apenas para verificação. Nunca compartilhamos com terceiros sem autorização (LGPD).</p>
           <div className="flex gap-2 mt-4">
             <Button variant="outline" onClick={() => setStep(2)}>Voltar</Button>
-            <Button disabled={!canFinish || loading} onClick={submit} className="bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)] flex-1" data-testid="kyc-submit">
+            <Button disabled={!canFinish || loading} onClick={submit} className="bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)] flex-1" data-testid="kyc-submit">
               {loading ? "Enviando..." : "Concluir verificação"}
             </Button>
           </div>

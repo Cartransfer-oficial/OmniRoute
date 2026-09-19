@@ -62,6 +62,10 @@ export default function VehicleDetails() {
 
   const reserve = async () => {
     if (!user) { nav("/login"); return; }
+    if (user.role === "owner") {
+      toast.info("Contas de proprietário não podem reservar. Use uma conta de locatário.");
+      return;
+    }
     if (!start || !end) { toast.error("Selecione as datas"); return; }
     if (user.kyc_level !== "approved") {
       toast.info("Complete a verificação de identidade primeiro");
@@ -86,7 +90,7 @@ export default function VehicleDetails() {
     <div data-testid="vehicle-details" className="max-w-7xl mx-auto px-4 md:px-8 py-6 pb-32">
       <SEO
         title={`Alugar ${v.brand} ${v.model} ${v.year} em ${v.city}`}
-        description={`${v.brand} ${v.model} ${v.year} · ${v.transmission === "automatic" ? "Automático" : "Manual"} · ${v.seats} lugares · ${v.city}/${v.state}. A partir de ${formatBRL(v.daily_price)}/dia com pagamento seguro pela LOCAFACIL.`}
+        description={`${v.brand} ${v.model} ${v.year} · ${v.transmission === "automatic" ? "Automático" : "Manual"} · ${v.seats} lugares · ${v.city}/${v.state}. A partir de ${formatBRL(v.daily_price)}/dia com pagamento seguro pela DriveHub.`}
         image={v.photos?.[0]}
         type="product"
         jsonLd={{
@@ -147,7 +151,7 @@ export default function VehicleDetails() {
               { i: Suitcase, l: `${v.luggage} malas` },
             ].map((s, i) => (
               <div key={i} className="border border-border p-4 bg-white">
-                <s.i size={22} weight="duotone" className="text-[hsl(22,100%,50%)]" />
+                <s.i size={22} weight="duotone" className="text-[hsl(210,100%,22%)]" />
                 <p className="mt-2 text-sm font-medium capitalize">{s.l}</p>
               </div>
             ))}
@@ -162,7 +166,7 @@ export default function VehicleDetails() {
                   const meta = FEATURE_LABELS[f] || { l: f, i: Info };
                   return (
                     <div key={f} className="flex items-center gap-2 text-sm py-2">
-                      <meta.i size={18} weight="duotone" className="text-[hsl(22,100%,50%)]" />
+                      <meta.i size={18} weight="duotone" className="text-[hsl(210,100%,22%)]" />
                       {meta.l}
                     </div>
                   );
@@ -176,11 +180,11 @@ export default function VehicleDetails() {
             <div className="mt-8">
               <h2 className="font-display text-xl font-bold mb-3">Regras</h2>
               <ul className="space-y-2 text-sm">
-                {v.rules.map((r, i) => <li key={i} className="flex gap-2"><span className="text-[hsl(22,100%,50%)]">•</span>{r}</li>)}
-                <li className="flex gap-2"><span className="text-[hsl(22,100%,50%)]">•</span>Quilometragem incluída: {v.included_km_per_day} km/dia (R$ {v.extra_km_price}/km excedente)</li>
-                {v.allow_pets && <li className="flex gap-2"><span className="text-[hsl(22,100%,50%)]">•</span>Animais permitidos</li>}
-                {v.airport_pickup && <li className="flex gap-2"><span className="text-[hsl(22,100%,50%)]">•</span>Retirada em aeroporto disponível</li>}
-                {v.delivery_available && <li className="flex gap-2"><span className="text-[hsl(22,100%,50%)]">•</span>Entrega no local: {formatBRL(v.delivery_fee)}</li>}
+                {v.rules.map((r, i) => <li key={i} className="flex gap-2"><span className="text-[hsl(210,100%,22%)]">•</span>{r}</li>)}
+                <li className="flex gap-2"><span className="text-[hsl(210,100%,22%)]">•</span>Quilometragem incluída: {v.included_km_per_day} km/dia (R$ {v.extra_km_price}/km excedente)</li>
+                {v.allow_pets && <li className="flex gap-2"><span className="text-[hsl(210,100%,22%)]">•</span>Animais permitidos</li>}
+                {v.airport_pickup && <li className="flex gap-2"><span className="text-[hsl(210,100%,22%)]">•</span>Retirada em aeroporto disponível</li>}
+                {v.delivery_available && <li className="flex gap-2"><span className="text-[hsl(210,100%,22%)]">•</span>Entrega no local: {formatBRL(v.delivery_fee)}</li>}
               </ul>
             </div>
           )}
@@ -214,7 +218,7 @@ export default function VehicleDetails() {
         {/* BOOKING CTA */}
         <aside data-testid="booking-panel" className="md:sticky md:top-20 md:self-start border border-border p-6 bg-white">
           <div className="flex items-baseline gap-1">
-            <span className="font-display text-3xl font-black text-[hsl(22,100%,50%)]">{formatBRL(v.daily_price)}</span>
+            <span className="font-display text-3xl font-black text-[hsl(210,100%,22%)]">{formatBRL(v.daily_price)}</span>
             <span className="text-sm text-muted-foreground">/dia</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">Caução: {formatBRL(v.deposit)}</p>
@@ -249,13 +253,13 @@ export default function VehicleDetails() {
               <div className="flex justify-between text-muted-foreground text-xs"><span>Taxa de serviço (12%)</span><span className="numeric">Incluída</span></div>
               {deposit > 0 && <div className="flex justify-between"><span>Caução (bloqueio)</span><span className="numeric">{formatBRL(deposit)}</span></div>}
               <Separator />
-              <div className="flex justify-between font-bold text-base"><span>Total</span><span className="numeric text-[hsl(22,100%,50%)]">{formatBRL(total)}</span></div>
+              <div className="flex justify-between font-bold text-base"><span>Total</span><span className="numeric text-[hsl(210,100%,22%)]">{formatBRL(total)}</span></div>
               <p className="text-[10px] text-muted-foreground">Split automático: proprietário recebe {formatBRL(subtotal - commission)} · plataforma {formatBRL(commission)}</p>
             </div>
           )}
 
           <Button
-            className="w-full mt-4 bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)] text-white h-11 text-base font-bold"
+            className="w-full mt-4 bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)] text-white h-11 text-base font-bold"
             onClick={reserve}
             data-testid="btn-reserve"
           >

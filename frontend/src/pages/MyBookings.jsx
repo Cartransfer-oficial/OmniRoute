@@ -21,7 +21,7 @@ export default function MyBookings() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-8 py-8 pb-24" data-testid="my-bookings">
-      <span className="overline text-[hsl(22,100%,50%)]">Minhas reservas</span>
+      <span className="overline text-[hsl(210,100%,22%)]">Minhas reservas</span>
       <h1 className="font-display text-3xl md:text-4xl font-black mt-1">Suas viagens</h1>
 
       {loading && <div className="mt-8 text-muted-foreground">Carregando...</div>}
@@ -29,7 +29,7 @@ export default function MyBookings() {
         <div className="mt-10 border border-dashed border-border p-10 text-center">
           <Car size={40} className="mx-auto text-neutral-400" />
           <p className="mt-4 text-muted-foreground">Você ainda não fez reservas.</p>
-          <Link to="/buscar" className="inline-block mt-4 text-[hsl(22,100%,50%)] font-medium">Encontrar um carro →</Link>
+          <Link to="/buscar" className="inline-block mt-4 text-[hsl(210,100%,22%)] font-medium">Encontrar um carro →</Link>
         </div>
       )}
 
@@ -41,7 +41,7 @@ export default function MyBookings() {
               key={b.id}
               to={`/reserva/${b.id}`}
               data-testid={`booking-${b.id}`}
-              className="grid grid-cols-[100px_1fr_auto] gap-4 items-center border border-border p-3 hover:border-[hsl(22,100%,50%)] transition-colors"
+              className="grid grid-cols-[100px_1fr_auto] gap-4 items-center border border-border p-3 hover:border-[hsl(210,100%,22%)] transition-colors"
             >
               <img src={b.vehicle_snapshot.photo} alt="" className="w-full aspect-square object-cover" />
               <div>
@@ -51,7 +51,7 @@ export default function MyBookings() {
               </div>
               <div className="text-right">
                 <Badge className={s.c}>{s.l}</Badge>
-                <p className="mt-1 font-bold text-[hsl(22,100%,50%)] numeric">{formatBRL(b.pricing.total)}</p>
+                <p className="mt-1 font-bold text-[hsl(210,100%,22%)] numeric">{formatBRL(b.pricing.total)}</p>
               </div>
             </Link>
           );

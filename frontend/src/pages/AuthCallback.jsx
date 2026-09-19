@@ -47,7 +47,7 @@ export default function AuthCallback() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center" data-testid="auth-callback">
       <div className="text-center">
-        <div className="w-10 h-10 border-2 border-[hsl(22,100%,50%)] border-t-transparent rounded-full animate-spin mx-auto" />
+        <div className="w-10 h-10 border-2 border-[hsl(210,100%,22%)] border-t-transparent rounded-full animate-spin mx-auto" />
         <p className="mt-4 text-muted-foreground text-sm">Finalizando login com Google...</p>
       </div>
     </div>

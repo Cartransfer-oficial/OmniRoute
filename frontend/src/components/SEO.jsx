@@ -9,7 +9,7 @@ export default function SEO({
   noindex = false,
   jsonLd,
 }) {
-  const fullTitle = title ? `${title} — LOCAFACIL` : "LOCAFACIL — Marketplace de aluguel de carros no Brasil";
+  const fullTitle = title ? `${title} — DriveHub` : "DriveHub — Marketplace de aluguel de carros no Brasil";
   const desc = description || "Alugue carros direto com proprietários verificados em todo o Brasil. Pagamento seguro com split, contrato digital, retirada em minutos.";
   const img = image || "https://images.pexels.com/photos/37075472/pexels-photo-37075472.jpeg";
   const href = typeof window !== "undefined" ? (url || window.location.href) : (url || "/");
@@ -28,7 +28,7 @@ export default function SEO({
       <meta property="og:image" content={img} />
       <meta property="og:url" content={href} />
       <meta property="og:locale" content="pt_BR" />
-      <meta property="og:site_name" content="LOCAFACIL" />
+      <meta property="og:site_name" content="DriveHub" />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />

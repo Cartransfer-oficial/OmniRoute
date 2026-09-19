@@ -40,7 +40,7 @@ export default function SearchBar({ dark = false }) {
             onChange={(e) => setCity(e.target.value)}
             placeholder="Cidade (ex: Florianópolis)"
             data-testid="search-city"
-            className="border-0 border-b border-border rounded-none focus-visible:ring-0 focus-visible:border-[hsl(22,100%,50%)] px-1 h-9 font-medium"
+            className="border-0 border-b border-border rounded-none focus-visible:ring-0 focus-visible:border-[hsl(210,100%,22%)] px-1 h-9 font-medium"
           />
         </div>
         <div>
@@ -86,7 +86,7 @@ export default function SearchBar({ dark = false }) {
           <Button
             type="submit"
             data-testid="search-submit"
-            className="bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)] text-white h-10 px-4 shrink-0"
+            className="bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)] text-white h-10 px-4 shrink-0"
           >
             <MagnifyingGlass size={18} weight="bold" />
             <span className="hidden md:inline ml-1">Encontrar</span>

@@ -34,7 +34,7 @@ export default function Register() {
       <form onSubmit={submit} className="w-full max-w-md space-y-4 bg-white border border-border p-8">
         <div>
           <h1 className="font-display text-3xl font-black">Criar conta</h1>
-          <p className="text-sm text-muted-foreground mt-1">Já tem conta? <Link to="/login" className="text-[hsl(22,100%,50%)] font-medium">Entrar</Link></p>
+          <p className="text-sm text-muted-foreground mt-1">Já tem conta? <Link to="/login" className="text-[hsl(210,100%,22%)] font-medium">Entrar</Link></p>
         </div>
 
         <GoogleAuthButton label="Criar conta com Google" />
@@ -84,14 +84,14 @@ export default function Register() {
                 type="button"
                 data-testid={`reg-role-${r.v}`}
                 onClick={() => setForm({ ...form, role: r.v })}
-                className={`border p-3 text-sm font-medium ${form.role === r.v ? "border-[hsl(22,100%,50%)] bg-orange-50 text-[hsl(22,100%,40%)]" : "border-border"}`}
+                className={`border p-3 text-sm font-medium ${form.role === r.v ? "border-[hsl(210,100%,22%)] bg-sky-50 text-[hsl(210,100%,18%)]" : "border-border"}`}
               >
                 {r.l}
               </button>
             ))}
           </div>
         </div>
-        <Button type="submit" disabled={loading} className="w-full bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)]" data-testid="reg-submit">
+        <Button type="submit" disabled={loading} className="w-full bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)]" data-testid="reg-submit">
           {loading ? "Criando..." : "Criar minha conta"}
         </Button>
         <p className="text-xs text-muted-foreground text-center">Ao continuar você aceita os Termos de Uso e a Política de Privacidade (LGPD).</p>

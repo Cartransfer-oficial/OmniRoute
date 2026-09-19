@@ -16,12 +16,24 @@ import {
 
 const KYC_LABELS = { basic: "Básico", identity: "Identidade", cnh: "CNH", payment: "Pagamento", approved: "Aprovado" };
 
-function UserDetailModal({ uid, onClose }) {
+function UserDetailModal({ uid, onClose, onChanged }) {
   const [data, setData] = useState(null);
-  useEffect(() => {
-    if (!uid) return;
-    api.get(`/admin/users/${uid}`).then(({ data }) => setData(data));
-  }, [uid]);
+  const reload = () => api.get(`/admin/users/${uid}`).then(({ data }) => setData(data));
+  useEffect(() => { if (uid) reload(); /* eslint-disable-next-line */ }, [uid]);
+
+  const suspend = async () => {
+    if (!window.confirm(`Suspender ${data.user.name}? Isso pausa todos os veículos e encerra sessões ativas.`)) return;
+    try {
+      await api.post(`/admin/users/${uid}/suspend`);
+      toast.success("Usuário suspenso");
+      reload(); onChanged?.();
+    } catch (e) { toast.error(e?.response?.data?.detail || "Erro"); }
+  };
+  const unsuspend = async () => {
+    await api.post(`/admin/users/${uid}/unsuspend`);
+    toast.success("Usuário reativado"); reload(); onChanged?.();
+  };
+
   if (!uid) return null;
   return (
     <Dialog open={!!uid} onOpenChange={(o) => !o && onClose()}>
@@ -34,14 +46,22 @@ function UserDetailModal({ uid, onClose }) {
                 <div>
                   <h3 className="font-display text-2xl font-bold">{data.user.name}</h3>
                   <p className="text-sm text-muted-foreground capitalize">{data.user.role} · Cadastro em {formatDate(data.user.created_at)}</p>
+                  {data.user.suspended && <Badge className="bg-red-100 text-red-800 mt-1">⚠ Suspenso</Badge>}
                 </div>
-                <Badge className={data.user.kyc_level === "approved" ? "bg-[hsl(155,100%,33%)] text-white" : "bg-amber-100 text-amber-800"}>
-                  <ShieldCheck size={12} className="mr-1" />KYC: {KYC_LABELS[data.user.kyc_level] || data.user.kyc_level}
-                </Badge>
+                <div className="flex flex-col gap-1 items-end">
+                  <Badge className={data.user.kyc_level === "approved" ? "bg-[hsl(155,100%,33%)] text-white" : "bg-amber-100 text-amber-800"}>
+                    <ShieldCheck size={12} className="mr-1" />KYC: {KYC_LABELS[data.user.kyc_level] || data.user.kyc_level}
+                  </Badge>
+                  {data.user.role !== "admin" && (
+                    data.user.suspended
+                      ? <Button size="sm" onClick={unsuspend} className="mt-2" data-testid="btn-unsuspend">Reativar conta</Button>
+                      : <Button size="sm" variant="destructive" onClick={suspend} className="mt-2" data-testid="btn-suspend">Suspender conta</Button>
+                  )}
+                </div>
               </div>
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                <div className="flex items-center gap-2"><Envelope size={14} className="text-[hsl(22,100%,50%)]" /> {data.user.email}</div>
-                {data.user.phone && <div className="flex items-center gap-2"><Phone size={14} className="text-[hsl(22,100%,50%)]" /> {data.user.phone}</div>}
+                <div className="flex items-center gap-2"><Envelope size={14} className="text-[hsl(210,100%,22%)]" /> {data.user.email}</div>
+                {data.user.phone && <div className="flex items-center gap-2"><Phone size={14} className="text-[hsl(210,100%,22%)]" /> {data.user.phone}</div>}
                 {data.user.whatsapp && <div className="flex items-center gap-2"><WhatsappLogo size={14} className="text-[hsl(155,100%,33%)]" /> {data.user.whatsapp}</div>}
                 {data.user.instagram && <div className="flex items-center gap-2"><InstagramLogo size={14} className="text-pink-600" /> {data.user.instagram}</div>}
                 {data.user.facebook && <div className="flex items-center gap-2"><FacebookLogo size={14} className="text-blue-600" /> {data.user.facebook}</div>}
@@ -82,7 +102,7 @@ function UserDetailModal({ uid, onClose }) {
                     <img src={v.photos?.[0]} alt="" className="w-16 h-16 object-cover" />
                     <div className="flex-1">
                       <p className="font-bold">{v.brand} {v.model} · {v.year}</p>
-                      <p className="text-xs text-muted-foreground">{v.city}/{v.state} · {formatBRL(v.daily_price)}/dia</p>
+                      <p className="text-xs text-muted-foreground">{v.city}/{v.state} · {formatBRL(v.daily_price)}/dia · {v.status}</p>
                     </div>
                     <Badge variant={v.verified ? "default" : "outline"}>{v.verified ? "Verificado" : "Pendente"}</Badge>
                   </div>
@@ -197,6 +217,7 @@ export default function AdminDashboard() {
   const [m, setM] = useState(null);
   const [users, setUsers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [commission, setCommission] = useState(12);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -207,8 +228,10 @@ export default function AdminDashboard() {
       api.get("/admin/metrics"),
       api.get("/admin/users"),
       api.get("/admin/vehicles"),
-    ]).then(([mm, u, v]) => {
-      setM(mm.data); setUsers(u.data); setVehicles(v.data); setCommission(mm.data.commission_pct);
+      api.get("/admin/analytics"),
+    ]).then(([mm, u, v, a]) => {
+      setM(mm.data); setUsers(u.data); setVehicles(v.data); setAnalytics(a.data);
+      setCommission(mm.data.commission_pct);
     });
   };
   useEffect(() => { load(); }, []);
@@ -235,13 +258,13 @@ export default function AdminDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 pb-24" data-testid="admin-dashboard">
-      <span className="overline text-[hsl(22,100%,50%)]">Painel administrativo</span>
-      <h1 className="font-display text-3xl md:text-4xl font-black mt-1">LOCAFACIL · Overview</h1>
+      <span className="overline text-[hsl(210,100%,22%)]">Painel administrativo</span>
+      <h1 className="font-display text-3xl md:text-4xl font-black mt-1">DriveHub · Overview</h1>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 stagger">
         {cards.map((c, i) => (
           <div key={i} className="border border-border p-4 bg-white">
-            <c.i size={20} weight="duotone" className="text-[hsl(22,100%,50%)]" />
+            <c.i size={20} weight="duotone" className="text-[hsl(210,100%,22%)]" />
             <p className="mt-2 text-[10px] overline text-muted-foreground">{c.l}</p>
             <p className="font-display text-xl font-black numeric">{c.v}</p>
           </div>
@@ -256,13 +279,82 @@ export default function AdminDashboard() {
             <Label>Comissão (%)</Label>
             <Input type="number" step="0.5" min="0" max="30" value={commission} onChange={(e) => setCommission(e.target.value)} data-testid="admin-commission" />
           </div>
-          <Button onClick={saveCommission} className="bg-[hsl(22,100%,50%)] hover:bg-[hsl(22,100%,45%)]" data-testid="admin-save-commission">Salvar</Button>
+          <Button onClick={saveCommission} className="bg-[hsl(210,100%,22%)] hover:bg-[hsl(210,100%,15%)]" data-testid="admin-save-commission">Salvar</Button>
         </div>
         <div className="mt-3 flex gap-2">
           {[10, 12, 15].map((p) => (
-            <button key={p} onClick={() => setCommission(p)} className="text-xs border border-border px-2 py-1 hover:border-[hsl(22,100%,50%)]" data-testid={`admin-pct-${p}`}>{p}%</button>
+            <button key={p} onClick={() => setCommission(p)} className="text-xs border border-border px-2 py-1 hover:border-[hsl(210,100%,22%)]" data-testid={`admin-pct-${p}`}>{p}%</button>
           ))}
         </div>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="font-display font-bold text-xl mb-3">📊 Analytics — quem está performando</h2>
+        {analytics && (
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="border border-border p-5 bg-white">
+              <h3 className="font-display font-bold mb-3">🏆 Veículos mais alugados</h3>
+              {analytics.top_vehicles.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma reserva ainda.</p>}
+              <ol className="space-y-2">
+                {analytics.top_vehicles.map((v, i) => (
+                  <li key={v.vehicle_id} className="flex items-center gap-3 text-sm" data-testid={`top-veh-${i}`}>
+                    <span className="font-display font-black text-lg text-[hsl(210,100%,22%)] w-6">#{i + 1}</span>
+                    {v.photo && <img src={v.photo} alt="" className="w-12 h-12 object-cover" />}
+                    <div className="flex-1">
+                      <p className="font-medium">{v.label}</p>
+                      <p className="text-xs text-muted-foreground">{v.bookings} reservas · {formatBRL(v.gmv)} GMV</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="border border-border p-5 bg-white">
+              <h3 className="font-display font-bold mb-3">⭐ Top proprietários (faturamento)</h3>
+              {analytics.top_owners.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma reserva ainda.</p>}
+              <ol className="space-y-2">
+                {analytics.top_owners.map((o, i) => (
+                  <li key={o.owner_id} className="flex items-center gap-3 text-sm" data-testid={`top-owner-${i}`}>
+                    <span className="font-display font-black text-lg text-[hsl(180,90%,45%)] w-6">#{i + 1}</span>
+                    <button onClick={() => setSelectedUser(o.owner_id)} className="flex-1 text-left hover:underline">
+                      <p className="font-medium">{o.name}</p>
+                      <p className="text-xs text-muted-foreground">{o.bookings} reservas · {formatBRL(o.earnings)} recebidos</p>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="border border-border p-5 bg-amber-50">
+              <h3 className="font-display font-bold mb-3">⚠ Proprietários que precisam de ajuda</h3>
+              <p className="text-xs text-muted-foreground mb-2">Têm carros cadastrados mas ainda não venderam.</p>
+              {analytics.underperforming_owners.length === 0 && <p className="text-sm text-muted-foreground">Todos os proprietários estão vendendo. 🎉</p>}
+              <ul className="space-y-2">
+                {analytics.underperforming_owners.map((o) => (
+                  <li key={o.owner_id} className="flex items-center gap-3 text-sm" data-testid={`under-owner-${o.owner_id}`}>
+                    <button onClick={() => setSelectedUser(o.owner_id)} className="flex-1 text-left hover:underline">
+                      <p className="font-medium">{o.name}</p>
+                      <p className="text-xs text-muted-foreground">{o.vehicles} veículo(s) sem reservas</p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="border border-border p-5 bg-white">
+              <h3 className="font-display font-bold mb-3">📈 Distribuição por categoria</h3>
+              <ul className="space-y-2">
+                {analytics.categories.map((c) => {
+                  const max = Math.max(...analytics.categories.map((x) => x.count));
+                  const pct = (c.count / max) * 100;
+                  return (
+                    <li key={c.category} className="text-sm">
+                      <div className="flex justify-between mb-0.5"><span className="capitalize">{c.category}</span><span className="font-bold numeric">{c.count}</span></div>
+                      <div className="h-2 bg-neutral-100 overflow-hidden"><div style={{ width: `${pct}%` }} className="h-full bg-[hsl(210,100%,22%)]" /></div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="mt-10">
@@ -319,7 +411,7 @@ export default function AdminDashboard() {
               key={t.k}
               onClick={() => setTab(t.k)}
               data-testid={`admin-tab-${t.k}`}
-              className={`text-sm px-3 py-1.5 border ${tab === t.k ? "border-[hsl(22,100%,50%)] bg-orange-50 text-[hsl(22,100%,40%)] font-medium" : "border-border"}`}
+              className={`text-sm px-3 py-1.5 border ${tab === t.k ? "border-[hsl(210,100%,22%)] bg-sky-50 text-[hsl(210,100%,18%)] font-medium" : "border-border"}`}
             >
               {t.l}
             </button>
@@ -342,7 +434,7 @@ export default function AdminDashboard() {
                   key={u.id}
                   onClick={() => setSelectedUser(u.id)}
                   data-testid={`admin-user-${u.id}`}
-                  className="border-t border-border cursor-pointer hover:bg-orange-50 transition-colors"
+                  className="border-t border-border cursor-pointer hover:bg-sky-50 transition-colors"
                 >
                   <td className="p-3 font-medium">{u.name}</td>
                   <td className="p-3">{u.email}</td>
@@ -352,6 +444,7 @@ export default function AdminDashboard() {
                   </td>
                   <td className="p-3 capitalize">{u.role}</td>
                   <td className="p-3">
+                    {u.suspended && <Badge className="bg-red-100 text-red-800 text-xs mr-1">Suspenso</Badge>}
                     {u.kyc_level === "approved"
                       ? <Badge className="bg-[hsl(155,100%,33%)] text-white text-xs">Aprovado</Badge>
                       : <Badge className="bg-neutral-100 text-neutral-700 text-xs">{KYC_LABELS[u.kyc_level] || u.kyc_level}</Badge>}
@@ -363,7 +456,7 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      <UserDetailModal uid={selectedUser} onClose={() => setSelectedUser(null)} />
+      <UserDetailModal uid={selectedUser} onClose={() => setSelectedUser(null)} onChanged={load} />
       <VehicleDetailModal vid={selectedVehicle} onClose={() => setSelectedVehicle(null)} onVerified={load} />
     </div>
   );
