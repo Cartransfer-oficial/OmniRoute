@@ -1,0 +1,30 @@
+{
+  "summary": "Iteration 3 (Emergent Google Auth). Backend: 9/9 pytest tests passed covering: (1) POST /api/auth/google/session returns 400 'X-Session-ID header ausente' when header missing; (2) returns 401 'session_id inválido ou expirado' when Emergent returns non-200 for an invalid session_id (verified against real Emergent endpoint); (3) legacy JWT login admin@locafacil.com.br + /auth/me still works with access_token cookie; (4) cookie precedence — with BOTH access_token (admin JWT) and session_token (points to Google user) set, /auth/me resolves the Google user via session_token (session_token wins); (5) session expiry — expired session in db.sessions falls back to JWT, returning 401 when no JWT present; (6) logout deletes the session document from db.sessions and clears both cookies (subsequent /auth/me → 401); (7) admin elevation logic for tailansantos06@gmail.com verified via db simulation for both first-login create (role='admin', kyc_level='approved', auth_provider='google', password_hash='', avatar from picture, social fields defaulted '') and existing-user elevation ($set role='admin', kyc_level='approved'); (8) session upsert (same session_token twice → 1 document). Frontend: /login shows google-auth-btn labeled 'Entrar com Google'; /cadastro shows google-auth-btn labeled 'Criar conta com Google'; both correctly redirect to https://auth.emergentagent.com/?redirect=<encoded origin>/auth-callback (verified by intercepting the top-level nav — URL = 'https://auth.emergentagent.com/?redirect=https%3A%2F%2Faluguel-veiculos-br.preview.emergentagent.com%2Fauth-callback'). /auth-callback direct nav (no hash) redirects to /login. Hash detection verified end-to-end: visiting /buscar#session_id=fake_capture triggers Shell to render <AuthCallback/>, which calls POST /api/auth/google/session with X-Session-ID header, receives 401, toasts 'session_id inválido ou expirado', and navigates to /login. Full integration path proven live.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration3_google_auth.py",
+    "/app/backend/tests/test_iteration2.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/iteration3_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py now 1133 lines — split into routers/ (auth.py, bookings.py, vehicles.py, admin.py) — recurring recommendation from iter1/iter2, still not addressed.",
+    "get_current_user (server.py:85-126) correctly checks session_token cookie first, then Authorization Bearer session match, then falls back to JWT access_token cookie — precedence order matches spec.",
+    "Session expiry check (server.py:99-104) is timezone-safe: parses ISO strings, patches naive datetimes to UTC before comparing — good.",
+    "POST /api/auth/google/session (server.py:313-377) uses upsert with session_token as the unique key — no duplicates possible. Also correctly elevates existing users whose email is in ADMIN_GOOGLE_EMAILS (server.py:362-364).",
+    "ADMIN_GOOGLE_EMAILS is a hardcoded Python set of size 1 — acceptable for single-owner platform, but consider moving to env var for future flexibility (e.g. ADMIN_EMAILS='a@b.com,c@d.com').",
+    "AuthCallback.jsx uses useRef guard against React 18 StrictMode double-mount → good. Reads location.hash reactively via useLocation — Shell in App.js also reads it synchronously to render callback on any route with #session_id=.",
+    "AuthContext skips /auth/me GET when hash contains 'session_id=' — prevents an initial 401 before the callback stores the cookie.",
+    "GoogleAuthButton constructs redirect from window.location.origin (no hardcoding). Both callers pass different labels — clean."
+  ],
+  "updated_files": ["/app/backend/tests/test_iteration3_google_auth.py"],
+  "success_rate": {"backend": "100% (9/9 new iter3 + prior 43 iter1+iter2 untouched)", "frontend": "100% (all 6 spec items verified: login btn, register btn, redirect URL construction on both pages, /auth-callback no-hash fallback, hash detection reactive rendering, end-to-end 401 error surfacing)"},
+  "test_credentials": "admin@locafacil.com.br / Locafacil@2026 (JWT admin), locatario@teste.com / Teste@2026, proprietario@teste.com / Teste@2026. Google admin email 'tailansantos06@gmail.com' cannot be tested via real OAuth from automation — validated via DB simulation of the elevation code path.",
+  "seed_data_creation": "Test users prefixed 'test_google_' and sessions prefixed 'TEST_' are auto-cleaned by module-scoped teardown fixture. Real tailansantos06@gmail.com row (if any) is snapshotted and restored around the elevation-simulation test.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter3 introduced Emergent Google Auth alongside JWT — both coexist cleanly. Cookie precedence: session_token > access_token. New test file: /app/backend/tests/test_iteration3_google_auth.py (9 tests, uses pymongo directly to seed db.sessions to simulate a signed-in Google user without real OAuth). All 3 pytest files can be run together: pytest /app/backend/tests/ -v. Frontend hash detection was validated by observing the real 401 toast 'session_id inválido ou expirado' after visiting /<any>#session_id=<fake> — this proves the full loop Shell→AuthCallback→POST /auth/google/session→backend Emergent call→error surfacing.",
+  "rca of the issue": "N/A — no defects found."
+}
