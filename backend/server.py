@@ -104,6 +104,19 @@ class RegisterIn(BaseModel):
     password: str = Field(min_length=6)
     role: Literal["renter", "owner"] = "renter"
     phone: Optional[str] = None
+    whatsapp: Optional[str] = None
+    instagram: Optional[str] = None
+    facebook: Optional[str] = None
+
+
+class ProfileUpdateIn(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    whatsapp: Optional[str] = None
+    instagram: Optional[str] = None
+    facebook: Optional[str] = None
+    bio: Optional[str] = None
+    avatar: Optional[str] = None
 
 
 class LoginIn(BaseModel):
@@ -221,6 +234,10 @@ async def register(data: RegisterIn, response: Response):
         "email": email,
         "name": data.name,
         "phone": data.phone or "",
+        "whatsapp": data.whatsapp or data.phone or "",
+        "instagram": data.instagram or "",
+        "facebook": data.facebook or "",
+        "bio": "",
         "role": data.role,
         "password_hash": hash_pw(data.password),
         "kyc_level": "basic",  # basic, identity, cnh, payment, approved
@@ -254,6 +271,15 @@ async def logout(response: Response):
 @api.get("/auth/me")
 async def me(user: dict = Depends(get_current_user)):
     return user
+
+
+@api.patch("/auth/profile")
+async def update_profile(data: ProfileUpdateIn, user: dict = Depends(get_current_user)):
+    updates = {k: v for k, v in data.model_dump().items() if v is not None}
+    if updates:
+        await db.users.update_one({"id": user["id"]}, {"$set": updates})
+    fresh = await db.users.find_one({"id": user["id"]})
+    return sanitize_user(fresh)
 
 
 # ------------- KYC -------------
@@ -469,6 +495,28 @@ async def get_booking(bid: str, user: dict = Depends(get_current_user)):
     if user["role"] != "admin" and user["id"] not in (b["renter_id"], b["owner_id"]):
         raise HTTPException(403, "Acesso negado")
     b.pop("_id", None)
+    # Reveal owner and renter contact ONLY after payment is captured
+    paid = b.get("status") in ("confirmed", "checked_in", "completed")
+    if paid or user["role"] == "admin":
+        owner = await db.users.find_one({"id": b["owner_id"]}, {"password_hash": 0, "_id": 0})
+        renter = await db.users.find_one({"id": b["renter_id"]}, {"password_hash": 0, "_id": 0})
+        b["owner_contact"] = {
+            "name": owner.get("name"),
+            "phone": owner.get("phone", ""),
+            "whatsapp": owner.get("whatsapp", ""),
+            "instagram": owner.get("instagram", ""),
+        } if owner else None
+        b["renter_contact"] = {
+            "name": renter.get("name"),
+            "phone": renter.get("phone", ""),
+            "whatsapp": renter.get("whatsapp", ""),
+        } if renter else None
+    # Include pickup address after payment
+    if paid:
+        v = await db.vehicles.find_one({"id": b["vehicle_id"]})
+        if v:
+            b["pickup_address"] = f"{v.get('neighborhood', '')}, {v.get('city')}/{v.get('state')}"
+            b["pickup_coords"] = {"lat": v.get("lat"), "lng": v.get("lng")}
     return b
 
 
@@ -711,6 +759,35 @@ async def admin_users(user: dict = Depends(require_role("admin"))):
     return docs
 
 
+@api.get("/admin/users/{uid}")
+async def admin_user_detail(uid: str, user: dict = Depends(require_role("admin"))):
+    u = await db.users.find_one({"id": uid}, {"password_hash": 0, "_id": 0})
+    if not u:
+        raise HTTPException(404, "Usuário não encontrado")
+    vehicles = await db.vehicles.find({"owner_id": uid}).to_list(200)
+    vehicles = [public_vehicle(v, include_exact_location=True) for v in vehicles]
+    bookings_as_renter = await db.bookings.find({"renter_id": uid}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    bookings_as_owner = await db.bookings.find({"owner_id": uid}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return {
+        "user": u,
+        "vehicles": vehicles,
+        "bookings_as_renter": bookings_as_renter,
+        "bookings_as_owner": bookings_as_owner,
+    }
+
+
+@api.get("/admin/vehicles/{vid}")
+async def admin_vehicle_detail(vid: str, user: dict = Depends(require_role("admin"))):
+    v = await db.vehicles.find_one({"id": vid})
+    if not v:
+        raise HTTPException(404, "Veículo não encontrado")
+    owner = await db.users.find_one({"id": v["owner_id"]}, {"password_hash": 0, "_id": 0})
+    bookings = await db.bookings.find({"vehicle_id": vid}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    out = public_vehicle(v, include_exact_location=True)
+    out["plate_full"] = v.get("plate")
+    return {"vehicle": out, "owner": owner, "bookings": bookings}
+
+
 @api.get("/admin/vehicles")
 async def admin_all_vehicles(user: dict = Depends(require_role("admin"))):
     docs = await db.vehicles.find().to_list(500)
@@ -739,13 +816,27 @@ async def seed():
     if not await db.config.find_one({"key": "commission_pct"}):
         await db.config.insert_one({"key": "commission_pct", "value": 12.0})
 
+    # migrate existing test users to include social fields
+    await db.users.update_one(
+        {"email": "locatario@teste.com"},
+        {"$set": {"whatsapp": "+5548999990001", "instagram": "@mariasilva",
+                   "facebook": "maria.silva", "bio": "Viajo pelo Brasil com a família."}},
+    )
+    await db.users.update_one(
+        {"email": "proprietario@teste.com"},
+        {"$set": {"whatsapp": "+5548999990002", "instagram": "@joaoferreira",
+                   "facebook": "joao.ferreira",
+                   "bio": "Alugo carros bem cuidados na região de Florianópolis."}},
+    )
+
     # admin
     admin_email = os.environ["ADMIN_EMAIL"].lower()
     admin_pw = os.environ["ADMIN_PASSWORD"]
     if not await db.users.find_one({"email": admin_email}):
         await db.users.insert_one({
             "id": new_id(), "email": admin_email, "name": "Admin LOCAFACIL",
-            "phone": "", "role": "admin", "password_hash": hash_pw(admin_pw),
+            "phone": "", "whatsapp": "", "instagram": "", "facebook": "", "bio": "",
+            "role": "admin", "password_hash": hash_pw(admin_pw),
             "kyc_level": "approved", "kyc_data": None, "avatar": "", "created_at": now_iso(),
         })
 
@@ -753,7 +844,10 @@ async def seed():
     if not await db.users.find_one({"email": "locatario@teste.com"}):
         await db.users.insert_one({
             "id": new_id(), "email": "locatario@teste.com", "name": "Maria Silva",
-            "phone": "+55 48 99999-0001", "role": "renter",
+            "phone": "+55 48 99999-0001", "whatsapp": "+5548999990001",
+            "instagram": "@mariasilva", "facebook": "maria.silva",
+            "bio": "Viajo pelo Brasil com a família.",
+            "role": "renter",
             "password_hash": hash_pw("Teste@2026"),
             "kyc_level": "approved",
             "kyc_data": {"cpf": "***.***.***-**", "cnh_number": "***", "cnh_category": "B"},
@@ -766,7 +860,10 @@ async def seed():
         owner_id = new_id()
         await db.users.insert_one({
             "id": owner_id, "email": "proprietario@teste.com", "name": "João Ferreira",
-            "phone": "+55 48 99999-0002", "role": "owner",
+            "phone": "+55 48 99999-0002", "whatsapp": "+5548999990002",
+            "instagram": "@joaoferreira", "facebook": "joao.ferreira",
+            "bio": "Alugo carros bem cuidados na região de Florianópolis.",
+            "role": "owner",
             "password_hash": hash_pw("Teste@2026"),
             "kyc_level": "approved", "kyc_data": None, "avatar": "", "created_at": now_iso(),
         })

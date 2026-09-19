@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { ShieldCheck, Car, ChatCircle, CheckCircle } from "@phosphor-icons/react";
+import { ShieldCheck, Car, ChatCircle, CheckCircle, WhatsappLogo, Phone, MapPin } from "@phosphor-icons/react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -42,9 +42,35 @@ export default function BookingDetails() {
     try {
       await api.post(`/bookings/${id}/pay`);
       toast.success("Pagamento confirmado! Reserva ativa.");
-      load();
+      await load();
+      setTimeout(() => {
+        const el = document.querySelector('[data-testid="whatsapp-owner-btn"]');
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
     } catch (e) { toast.error(e?.response?.data?.detail); }
     finally { setPaying(false); }
+  };
+
+  // Build WhatsApp deeplink with pre-filled booking summary
+  const buildWaLink = (phone, isRenter) => {
+    if (!phone) return null;
+    const clean = phone.replace(/\D/g, "");
+    if (!clean) return null;
+    const other = isRenter ? b.owner_contact : b.renter_contact;
+    const greeting = isRenter
+      ? `Olá ${b.owner_name}! Sou ${b.renter_name}, acabei de reservar seu ${b.vehicle_snapshot.brand} ${b.vehicle_snapshot.model} pelo LOCAFACIL.`
+      : `Olá ${b.renter_name}! Sou ${b.owner_name}, proprietário do ${b.vehicle_snapshot.brand} ${b.vehicle_snapshot.model} que você reservou pelo LOCAFACIL.`;
+    const msg = [
+      greeting,
+      "",
+      `📅 Período: ${formatDate(b.start_date)} até ${formatDate(b.end_date)} (${b.pricing.days} diárias)`,
+      `💰 Total pago: ${formatBRL(b.pricing.total)}`,
+      b.pickup_address ? `📍 Local de retirada: ${b.pickup_address}` : null,
+      `🔖 Reserva: #${b.id.slice(0, 8)}`,
+      "",
+      "Vamos combinar a retirada?",
+    ].filter(Boolean).join("\n");
+    return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
   };
 
   const send = async (e) => {
@@ -99,6 +125,83 @@ export default function BookingDetails() {
         </TabsList>
 
         <TabsContent value="summary" className="mt-6 grid md:grid-cols-2 gap-6">
+          {/* CONTACT PANEL — visible only after payment */}
+          {(b.status === "confirmed" || b.status === "checked_in" || b.status === "completed") && (b.owner_contact || b.renter_contact) && (
+            <div className="md:col-span-2 border-2 border-[hsl(155,100%,33%)] bg-green-50 p-5">
+              <div className="flex items-start justify-between flex-wrap gap-3">
+                <div>
+                  <h3 className="font-display font-bold text-lg flex items-center gap-2">
+                    <CheckCircle weight="fill" className="text-[hsl(155,100%,33%)]" />
+                    Pagamento confirmado — combine a retirada
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Agora vocês podem se comunicar diretamente para combinar a retirada do veículo.
+                  </p>
+                </div>
+              </div>
+
+              {isRenter && b.owner_contact && (
+                <div className="mt-4 bg-white border border-border p-4">
+                  <p className="overline text-xs text-muted-foreground">Proprietário</p>
+                  <p className="font-display font-bold text-lg">{b.owner_contact.name}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {b.owner_contact.whatsapp && (
+                      <a
+                        href={buildWaLink(b.owner_contact.whatsapp, true)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid="whatsapp-owner-btn"
+                        className="inline-flex items-center gap-2 bg-[hsl(155,100%,33%)] hover:bg-[hsl(155,100%,28%)] text-white px-4 py-2 font-bold transition-colors"
+                      >
+                        <WhatsappLogo weight="fill" size={20} />
+                        Abrir WhatsApp com o proprietário
+                      </a>
+                    )}
+                    {b.owner_contact.phone && (
+                      <a href={`tel:${b.owner_contact.phone}`} className="inline-flex items-center gap-2 border border-border px-4 py-2 hover:border-neutral-400">
+                        <Phone size={16} />{b.owner_contact.phone}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {isOwner && b.renter_contact && (
+                <div className="mt-4 bg-white border border-border p-4">
+                  <p className="overline text-xs text-muted-foreground">Locatário</p>
+                  <p className="font-display font-bold text-lg">{b.renter_contact.name}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {b.renter_contact.whatsapp && (
+                      <a
+                        href={buildWaLink(b.renter_contact.whatsapp, false)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid="whatsapp-renter-btn"
+                        className="inline-flex items-center gap-2 bg-[hsl(155,100%,33%)] hover:bg-[hsl(155,100%,28%)] text-white px-4 py-2 font-bold transition-colors"
+                      >
+                        <WhatsappLogo weight="fill" size={20} />
+                        Abrir WhatsApp com o locatário
+                      </a>
+                    )}
+                    {b.renter_contact.phone && (
+                      <a href={`tel:${b.renter_contact.phone}`} className="inline-flex items-center gap-2 border border-border px-4 py-2 hover:border-neutral-400">
+                        <Phone size={16} />{b.renter_contact.phone}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {b.pickup_address && (
+                <div className="mt-3 flex items-center gap-2 text-sm">
+                  <MapPin size={16} className="text-[hsl(22,100%,50%)]" />
+                  <span><b>Local de retirada:</b> {b.pickup_address}</span>
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground mt-3">O botão abre o WhatsApp com uma mensagem pré-preenchida contendo todos os dados da reserva — basta enviar.</p>
+            </div>
+          )}
+
           <div className="border border-border p-6">
             <h3 className="font-display font-bold text-lg mb-3">Detalhes financeiros</h3>
             <div className="space-y-2 text-sm">

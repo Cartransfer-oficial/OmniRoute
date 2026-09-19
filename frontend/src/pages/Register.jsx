@@ -9,7 +9,10 @@ import { toast } from "sonner";
 export default function Register() {
   const { register, formatApiError } = useAuth();
   const nav = useNavigate();
-  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", role: "renter" });
+  const [form, setForm] = useState({
+    name: "", email: "", phone: "", password: "", role: "renter",
+    whatsapp: "", instagram: "", facebook: "",
+  });
   const [loading, setLoading] = useState(false);
 
   const submit = async (e) => {
@@ -42,7 +45,21 @@ export default function Register() {
         </div>
         <div>
           <Label>Telefone</Label>
-          <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+55 11 99999-9999" data-testid="reg-phone" />
+          <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value, whatsapp: form.whatsapp || e.target.value })} placeholder="+55 11 99999-9999" data-testid="reg-phone" />
+        </div>
+        <div>
+          <Label>WhatsApp <span className="text-xs text-muted-foreground">(usado para combinar retirada)</span></Label>
+          <Input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="+5511999999999" data-testid="reg-whatsapp" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Instagram <span className="text-xs text-muted-foreground">(opcional)</span></Label>
+            <Input value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} placeholder="@usuario" data-testid="reg-instagram" />
+          </div>
+          <div>
+            <Label>Facebook <span className="text-xs text-muted-foreground">(opcional)</span></Label>
+            <Input value={form.facebook} onChange={(e) => setForm({ ...form, facebook: e.target.value })} placeholder="usuario" data-testid="reg-facebook" />
+          </div>
         </div>
         <div>
           <Label>Senha (mínimo 6 caracteres)</Label>
