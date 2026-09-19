@@ -8,9 +8,10 @@ import uuid
 import logging
 import bcrypt
 import jwt
+import httpx
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Literal
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, Query, Header
 from fastapi.responses import Response as FastAPIResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -66,11 +67,46 @@ def set_auth_cookie(resp: Response, token: str):
     )
 
 
+def set_session_cookie(resp: Response, token: str):
+    """Emergent Google Auth session cookie."""
+    resp.set_cookie(
+        key="session_token", value=token, httponly=True,
+        secure=True, samesite="none", max_age=604800, path="/",
+    )
+
+
+ADMIN_GOOGLE_EMAILS = {"tailansantos06@gmail.com"}
+
+
 def sanitize_user(u: dict) -> dict:
     return {k: v for k, v in u.items() if k not in ("password_hash", "_id")}
 
 
 async def get_current_user(request: Request) -> dict:
+    # 1) Emergent Google session (session_token cookie)
+    session_token = request.cookies.get("session_token")
+    if not session_token:
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            # Prefer session lookup for bearer if it matches a stored session
+            candidate = auth[7:]
+            found = await db.sessions.find_one({"session_token": candidate})
+            if found:
+                session_token = candidate
+    if session_token:
+        session = await db.sessions.find_one({"session_token": session_token})
+        if session:
+            expires_at = session.get("expires_at")
+            if isinstance(expires_at, str):
+                expires_at = datetime.fromisoformat(expires_at)
+            if expires_at and expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at and expires_at >= datetime.now(timezone.utc):
+                user = await db.users.find_one({"id": session["user_id"]})
+                if user:
+                    return sanitize_user(user)
+
+    # 2) Legacy JWT (access_token cookie or Authorization: Bearer <jwt>)
     token = request.cookies.get("access_token")
     if not token:
         auth = request.headers.get("Authorization", "")
@@ -264,9 +300,81 @@ async def login(data: LoginIn, response: Response):
 
 
 @api.post("/auth/logout")
-async def logout(response: Response):
+async def logout(request: Request, response: Response):
+    # remove any Emergent session from DB
+    session_token = request.cookies.get("session_token")
+    if session_token:
+        await db.sessions.delete_one({"session_token": session_token})
     response.delete_cookie("access_token", path="/")
+    response.delete_cookie("session_token", path="/")
     return {"ok": True}
+
+
+@api.post("/auth/google/session")
+async def google_session_exchange(
+    response: Response,
+    x_session_id: Optional[str] = Header(default=None, alias="X-Session-ID"),
+):
+    """Exchange the Emergent one-time session_id (URL fragment) for a persistent session cookie.
+
+    REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH.
+    """
+    if not x_session_id:
+        raise HTTPException(status_code=400, detail="X-Session-ID header ausente")
+
+    async with httpx.AsyncClient(timeout=15) as client_http:
+        r = await client_http.get(
+            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+            headers={"X-Session-ID": x_session_id},
+        )
+        if r.status_code != 200:
+            raise HTTPException(status_code=401, detail="session_id inválido ou expirado")
+        data = r.json()
+
+    email = (data.get("email") or "").lower()
+    name = data.get("name") or ""
+    picture = data.get("picture") or ""
+    session_token = data.get("session_token")
+    if not email or not session_token:
+        raise HTTPException(status_code=502, detail="Resposta inválida do provedor de autenticação")
+
+    # Find or create user
+    user = await db.users.find_one({"email": email})
+    if not user:
+        role = "admin" if email in ADMIN_GOOGLE_EMAILS else "renter"
+        user = {
+            "id": new_id(),
+            "email": email,
+            "name": name or email.split("@")[0],
+            "phone": "", "whatsapp": "", "instagram": "", "facebook": "", "bio": "",
+            "role": role,
+            "password_hash": "",  # Google-only account
+            "auth_provider": "google",
+            "avatar": picture,
+            "kyc_level": "approved" if role == "admin" else "basic",
+            "kyc_data": None,
+            "created_at": now_iso(),
+        }
+        await db.users.insert_one(user)
+    else:
+        # Update avatar and elevate to admin if this is the platform owner
+        updates = {"avatar": picture} if picture and not user.get("avatar") else {}
+        if email in ADMIN_GOOGLE_EMAILS and user.get("role") != "admin":
+            updates["role"] = "admin"
+            updates["kyc_level"] = "approved"
+        if updates:
+            await db.users.update_one({"id": user["id"]}, {"$set": updates})
+            user = await db.users.find_one({"id": user["id"]})
+
+    # Store session (7 days)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    await db.sessions.update_one(
+        {"session_token": session_token},
+        {"$set": {"session_token": session_token, "user_id": user["id"], "expires_at": expires_at}},
+        upsert=True,
+    )
+    set_session_cookie(response, session_token)
+    return {"user": sanitize_user(user)}
 
 
 @api.get("/auth/me")

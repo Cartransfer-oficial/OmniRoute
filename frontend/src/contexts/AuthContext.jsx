@@ -19,6 +19,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    // If returning from Emergent OAuth, let AuthCallback handle it first
+    if (typeof window !== "undefined" && window.location.hash?.includes("session_id=")) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
     refresh();
   }, [refresh]);
 

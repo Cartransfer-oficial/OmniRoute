@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import GoogleAuthButton from "@/components/GoogleAuthButton";
 
 export default function Register() {
   const { register, formatApiError } = useAuth();
@@ -34,6 +35,15 @@ export default function Register() {
         <div>
           <h1 className="font-display text-3xl font-black">Criar conta</h1>
           <p className="text-sm text-muted-foreground mt-1">Já tem conta? <Link to="/login" className="text-[hsl(22,100%,50%)] font-medium">Entrar</Link></p>
+        </div>
+
+        <GoogleAuthButton label="Criar conta com Google" />
+
+        <div className="relative py-2">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-muted-foreground">ou com e-mail</span>
+          </div>
         </div>
         <div>
           <Label>Nome completo</Label>

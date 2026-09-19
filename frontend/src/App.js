@@ -18,6 +18,7 @@ import AddVehicle from "@/pages/AddVehicle";
 import AdminDashboard from "@/pages/AdminDashboard";
 import Profile from "@/pages/Profile";
 import HowItWorks from "@/pages/HowItWorks";
+import AuthCallback from "@/pages/AuthCallback";
 
 function Protected({ children, roles }) {
   const { user, loading } = useAuth();
@@ -29,6 +30,11 @@ function Protected({ children, roles }) {
 }
 
 function Shell() {
+  const loc = useLocation();
+  // Detect OAuth callback synchronously from useLocation().hash (reactive)
+  if (loc.hash && loc.hash.includes("session_id=")) {
+    return <AuthCallback />;
+  }
   return (
     <>
       <Navbar />
@@ -40,6 +46,7 @@ function Shell() {
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Register />} />
           <Route path="/como-funciona" element={<HowItWorks />} />
+          <Route path="/auth-callback" element={<AuthCallback />} />
           <Route path="/verificacao" element={<Protected><KycFlow /></Protected>} />
           <Route path="/perfil" element={<Protected><Profile /></Protected>} />
           <Route path="/reserva/:id" element={<Protected><BookingDetails /></Protected>} />
